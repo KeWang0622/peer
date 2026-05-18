@@ -13,19 +13,52 @@ import { db, countPapers, type PaperRow } from "../db/client.js";
 type ProfTool = AgentTool<TSchema, null>;
 type ToolResult = AgentToolResult<null>;
 
-/** Capture console.log output during a callback. */
+/**
+ * Tee writes during a callback: stream live progress to stdout AND
+ * accumulate a clean copy the LLM can summarize. Covers console.log,
+ * console.error, AND process.stdout.write so no command silently
+ * disappears.
+ *
+ * Cooperates with the spinner: clears the spinner row before each
+ * line, lets the spinner re-paint after.
+ */
 async function captureStdout(fn: () => Promise<unknown> | unknown): Promise<string> {
   const chunks: string[] = [];
-  const orig = console.log;
-  console.log = (...args: unknown[]) => {
-    chunks.push(args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" "));
+  const origLog = console.log;
+  const origErr = console.error;
+  const origWrite = process.stdout.write.bind(process.stdout);
+
+  const emit = (rawLine: string) => {
+    chunks.push(rawLine);
+    const stripped = rawLine.replace(/\x1b\[[0-9;]*m/g, "");
+    // Clear the spinner row first so output never overlaps the spinner.
+    origWrite("\r\x1b[K");
+    origWrite("    " + stripped + "\n");
   };
+
+  console.log = (...args: unknown[]) => {
+    emit(args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" "));
+  };
+  console.error = (...args: unknown[]) => {
+    emit(args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" "));
+  };
+  // Override stdout.write so streaming `process.stdout.write(...)` calls
+  // (e.g. in `cmdAsk`) also flow through both paths.
+  process.stdout.write = ((chunk: unknown, ...rest: unknown[]) => {
+    const text = typeof chunk === "string" ? chunk : Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk);
+    chunks.push(text);
+    // Live: clear spinner then write raw (preserves the writer's formatting)
+    origWrite("\r\x1b[K");
+    return origWrite(text, ...(rest as []));
+  }) as typeof process.stdout.write;
+
   try {
     await fn();
   } finally {
-    console.log = orig;
+    console.log = origLog;
+    console.error = origErr;
+    process.stdout.write = origWrite;
   }
-  // Strip ANSI for the LLM
   return chunks.join("\n").replace(/\x1b\[[0-9;]*m/g, "");
 }
 

@@ -55,6 +55,7 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
 
   rl.on("close", () => {
     exiting = true;
+    stopSpinner();
     if (agent.state.isStreaming) agent.abort();
     console.log();
     console.log(c.dim(`research is a journey · session $${totalCostUsd().toFixed(4)}`));
@@ -62,6 +63,7 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
   });
 
   rl.on("SIGINT", () => {
+    stopSpinner();
     if (agent.state.isStreaming) {
       agent.abort();
       return;
@@ -177,18 +179,22 @@ function createEventRenderer(): ((event: AgentEvent) => void) & { reset: () => v
         renderMessageUpdate(event.assistantMessageEvent);
         break;
 
-      case "tool_execution_start":
+      case "tool_execution_start": {
         endInlineBlock();
-        console.log(c.dim("tool ") + c.accent(event.toolName) + c.dim(formatArgs(event.args)));
+        // Don't log here — toolcall_end already announced this tool.
+        startSpinner(event.toolName);
         break;
+      }
 
       case "tool_execution_update":
-        renderToolResult(event.partialResult);
+        // Tool emitted progress — keep spinner ticking.
         break;
 
-      case "tool_execution_end":
-        renderToolResult(event.result, event.isError);
+      case "tool_execution_end": {
+        stopSpinner();
+        renderToolResultSummary(event.toolName, event.result, event.isError);
         break;
+      }
 
       case "message_end":
         if (event.message.role === "assistant" && event.message.errorMessage) {
@@ -201,6 +207,7 @@ function createEventRenderer(): ((event: AgentEvent) => void) & { reset: () => v
         break;
 
       case "agent_end":
+        stopSpinner();
         endInlineBlock();
         break;
     }
@@ -252,17 +259,20 @@ function createEventRenderer(): ((event: AgentEvent) => void) & { reset: () => v
     }
   }
 
-  function renderToolResult(result: Partial<AgentToolResult<unknown>> | undefined, isError = false): void {
+  function renderToolResultSummary(
+    toolName: string,
+    result: Partial<AgentToolResult<unknown>> | undefined,
+    isError = false,
+  ): void {
     const text = resultText(result);
-    if (!text) return;
     endInlineBlock();
     if (isError) {
-      console.log(c.bad("  ✗ tool error: ") + truncate(text, 200));
-    } else {
-      // Don't dump full tool output — the LLM will summarize it in its next turn.
-      // Just show a short confirmation.
-      console.log(c.ok("  ✓") + c.dim(` (${text.length} chars)`));
+      console.log(c.bad("  ✗ ") + toolName + c.bad(" failed: ") + truncate(text || "(no error message)", 200));
+      return;
     }
+    // Tool-specific compact summary
+    const summary = summarizeToolResult(toolName, text);
+    console.log(c.ok("  ✓ ") + summary);
   }
 
   function endInlineBlock(): void {
@@ -272,6 +282,85 @@ function createEventRenderer(): ((event: AgentEvent) => void) & { reset: () => v
   }
 
   return render;
+}
+
+/**
+ * Compact, useful summary line per tool. Falls back to char count.
+ * Reads salient lines from the tee'd tool output.
+ */
+function summarizeToolResult(toolName: string, text: string): string {
+  if (!text) return `${toolName} (done)`;
+  switch (toolName) {
+    case "read_paper": {
+      const titleLine = /Read: (.+)/m.exec(text)?.[1];
+      const cost = /Cost: \$(\S+)/m.exec(text)?.[1];
+      if (titleLine) {
+        const t = titleLine.length > 60 ? titleLine.slice(0, 57) + "…" : titleLine;
+        return `read ${t}${cost ? `  ($${cost})` : ""}`;
+      }
+      break;
+    }
+    case "map_field": {
+      const papers = /(\d+) papers/.exec(text)?.[1];
+      const subfields = /(\d+) subfields/.exec(text)?.[1];
+      const dir = /→ (.+)/.exec(text)?.[1];
+      if (papers && subfields) return `mapped ${papers} papers · ${subfields} subfields${dir ? `  → ${truncate(dir.trim(), 40)}` : ""}`;
+      break;
+    }
+    case "ask_library":
+      return "answered from library";
+    case "find_citations":
+    case "cite": {
+      const n = (text.match(/^@article\{/gm) ?? []).length;
+      if (n > 0) return `found ${n} citation${n === 1 ? "" : "s"} (+ BibTeX)`;
+      break;
+    }
+    case "find_gap":
+    case "gap": {
+      const m = /Intersection size: \*\*(\d+)/.exec(text);
+      if (m) return `intersection: ${m[1]} papers found`;
+      break;
+    }
+    case "next_paper":
+    case "next": {
+      const t = /next ▸ (.+)/.exec(text)?.[1];
+      if (t) return `next: ${truncate(t.trim(), 60)}`;
+      break;
+    }
+    case "daily_picks":
+    case "daily": {
+      const n = (text.match(/^\d+\.\s/gm) ?? []).length;
+      if (n > 0) return `${n} arxiv pick${n === 1 ? "" : "s"} for today`;
+      break;
+    }
+    case "library_status":
+    case "history": {
+      const m = /library: (\d+) papers/.exec(text);
+      if (m) return `library: ${m[1]} papers`;
+      break;
+    }
+    case "brainstorm_idea":
+    case "brainstorm":
+      return "3 framings + 5 angles generated";
+    case "list_library": {
+      const n = (text.match(/^\d+\.\s/gm) ?? []).length;
+      return n > 0 ? `${n} papers listed` : "library listed";
+    }
+    case "read":
+    case "write":
+    case "edit": {
+      const m = /Successfully\s+(read|wrote|edited|updated)?\s*(\d+)?\s*(bytes|lines)?/i.exec(text);
+      if (m) return `${toolName}: ${m[0].toLowerCase()}`;
+      break;
+    }
+    case "bash": {
+      const first = text.split("\n").find((l) => l.trim().length > 0);
+      if (first) return `bash: ${truncate(first.trim(), 70)}`;
+      break;
+    }
+  }
+  const chars = text.length;
+  return `${toolName} (${chars} chars)`;
 }
 
 function resultText(result: Partial<AgentToolResult<unknown>> | undefined): string {
@@ -292,6 +381,39 @@ function formatArgs(args: unknown): string {
     return ` ${JSON.stringify(args)}`;
   } catch {
     return "";
+  }
+}
+
+// ============================================================
+// Tool spinner — shows elapsed time so user knows we're alive
+// ============================================================
+
+const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+let spinnerInterval: NodeJS.Timeout | null = null;
+let spinnerStart = 0;
+let spinnerName = "";
+
+function startSpinner(name: string): void {
+  if (!process.stdout.isTTY) return;
+  stopSpinner();
+  spinnerName = name;
+  spinnerStart = Date.now();
+  let frame = 0;
+  spinnerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - spinnerStart) / 1000);
+    process.stdout.write(
+      `\r  ${c.accent(SPINNER_FRAMES[frame % SPINNER_FRAMES.length]!)} ${spinnerName} ${c.dim(`(${elapsed}s)`)}    `,
+    );
+    frame++;
+  }, 100);
+}
+
+function stopSpinner(): void {
+  if (spinnerInterval) {
+    clearInterval(spinnerInterval);
+    spinnerInterval = null;
+    // Clear the spinner line
+    process.stdout.write("\r" + " ".repeat(60) + "\r");
   }
 }
 
