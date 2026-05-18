@@ -109,11 +109,13 @@ We get for free:
 - Multi-provider LLM support
 - Steering / follow-up queues
 
-We add:
-- 13 research-native tools (read_paper, search_papers, etc.)
-- 4-layer knowledge graph
-- Research persona system prompt
-- Two CLI commands (`prof read`, `prof map`)
+We add (in v0.0.1-alpha):
+- 2 CLI commands (`prof read`, `prof map`)
+- 2 slash commands when loaded as a pi extension (`/read`, `/map`)
+- 4-layer knowledge graph schema (L1+L2 actively written; L4 stubbed)
+- Research persona system prompt fragment
+
+Coming in v0.0.2+: the full 13-tool AgentTool[] set so `pi` users can call research operations directly inside the agent loop.
 
 `prof` can be installed standalone (`npm install -g @kewang/prof`) or as a pi extension (`pi install @kewang/prof`). The same code powers both.
 

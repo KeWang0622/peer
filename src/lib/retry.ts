@@ -37,8 +37,16 @@ export async function fetchWithRetry(
   const timeoutMs = opts.timeoutMs ?? 30_000;
   const shouldRetry = opts.shouldRetry ?? defaultShouldRetry;
 
+  // Hard cap on Retry-After waits so a misbehaving server cannot stall us indefinitely.
+  const RETRY_AFTER_CAP_MS = 30_000;
+
   let lastErr: unknown = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
+    // If caller already aborted, throw immediately (don't retry caller cancellations).
+    if (init.signal?.aborted) {
+      throw new Error("fetchWithRetry: caller aborted before request");
+    }
+
     const abortCtrl = new AbortController();
     const t = setTimeout(() => abortCtrl.abort(new Error(`request timeout after ${timeoutMs}ms`)), timeoutMs);
 
@@ -54,14 +62,16 @@ export async function fetchWithRetry(
         return resp;
       }
       if (attempt === retries) return resp;
-      // Honor Retry-After if present
+      // Honor Retry-After if present, but clamp to a reasonable max.
       const retryAfter = parseRetryAfter(resp.headers.get("retry-after"));
       const backoff = Math.min(baseMs * Math.pow(2, attempt), maxMs);
-      const delay = retryAfter ?? backoff;
+      const delay = retryAfter != null ? Math.min(retryAfter, RETRY_AFTER_CAP_MS) : backoff;
       const jitter = Math.random() * 0.2 * delay;
       await sleep(delay + jitter);
     } catch (err) {
       clearTimeout(t);
+      // If the caller aborted (not our own timeout), surface it without retrying.
+      if (init.signal?.aborted) throw err;
       lastErr = err;
       if (attempt === retries) throw err;
       if (!shouldRetry(null, err, attempt)) throw err;

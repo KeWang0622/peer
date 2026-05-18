@@ -291,8 +291,12 @@ function asStringArray(value: unknown): string[] {
 
 /** Quote a string for safe inclusion in YAML frontmatter (single-line strings only). */
 function yamlString(s: string): string {
-  // Collapse newlines/tabs to spaces, escape backslash + double quote, wrap in double quotes
-  const cleaned = s.replace(/[\r\n\t]+/g, " ").trim();
+  // Strip control chars except for tab/newline (which we then collapse), wrap in double quotes
+  const cleaned = s
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // strip control chars
+    .replace(/[\r\n\t]+/g, " ")
+    .trim()
+    .slice(0, 500); // cap pathological lengths
   return `"${cleaned.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
@@ -314,36 +318,49 @@ interface ResolvedId {
 /** Resolve arxiv id / DOI / S2 id / common URL forms. Returns nulls if unresolvable. */
 function resolveIdentifier(input: string): ResolvedId {
   const trimmed = input.trim().replace(/\/+$/, "");
-  // 1) arxiv id direct
+  // 1) arxiv id direct (1706.03762 or 1706.03762v5 etc.)
   if (ax.isArxivId(trimmed)) {
     return { arxivId: trimmed.replace(/^arxiv:/i, "").replace(/v\d+$/, ""), doi: null, s2Id: null };
   }
-  // 2) arxiv URL (abs/ or pdf/)
-  const arxivUrl = trimmed.match(/arxiv\.org\/(?:abs|pdf)\/([0-9a-z.\-\/]+?)(?:v\d+)?(?:\.pdf)?$/i);
-  if (arxivUrl?.[1]) {
-    return { arxivId: arxivUrl[1], doi: null, s2Id: null };
+  // 2) URL forms — parse structurally so query/fragment don't leak in
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const u = new URL(trimmed);
+      const host = u.hostname.toLowerCase();
+      const pathParts = u.pathname.split("/").filter(Boolean);
+
+      // arxiv.org/abs/<id> or arxiv.org/pdf/<id>.pdf
+      if (host.endsWith("arxiv.org") && (pathParts[0] === "abs" || pathParts[0] === "pdf")) {
+        const id = (pathParts.slice(1).join("/") || "").replace(/\.pdf$/i, "").replace(/v\d+$/, "");
+        if (id) return { arxivId: id, doi: null, s2Id: null };
+      }
+
+      // doi.org/<doi> or dx.doi.org/<doi>
+      if (host === "doi.org" || host === "dx.doi.org" || host.endsWith(".doi.org")) {
+        const doi = decodeURIComponent(pathParts.join("/"));
+        if (/^10\.\d{4,9}\//.test(doi)) return { arxivId: null, doi, s2Id: null };
+      }
+
+      // semanticscholar.org/paper/<title>/<40-hex>  (40-hex is the corpus id)
+      if (host.endsWith("semanticscholar.org") && pathParts[0] === "paper") {
+        const sha = pathParts.find((p) => /^[0-9a-f]{40}$/i.test(p));
+        if (sha) return { arxivId: null, doi: null, s2Id: sha };
+      }
+    } catch {
+      // fall through to regex paths
+    }
   }
-  // 3) DOI URL
-  const doiUrl = trimmed.match(/(?:doi\.org\/|dx\.doi\.org\/)(10\.\d{4,9}\/\S+)/i);
-  if (doiUrl?.[1]) {
-    return { arxivId: null, doi: doiUrl[1], s2Id: null };
-  }
-  // 4) raw DOI
+  // 3) raw DOI
   if (/^10\.\d{4,9}\/\S+$/.test(trimmed)) {
     return { arxivId: null, doi: trimmed, s2Id: null };
   }
-  // 5) DOI: prefix
+  // 4) DOI: prefix
   if (/^DOI:/i.test(trimmed)) {
     return { arxivId: null, doi: trimmed.replace(/^DOI:/i, ""), s2Id: null };
   }
-  // 6) S2 40-hex id
+  // 5) S2 40-hex id
   if (/^[0-9a-f]{40}$/i.test(trimmed)) {
     return { arxivId: null, doi: null, s2Id: trimmed };
-  }
-  // 7) S2 paper URL
-  const s2Url = trimmed.match(/semanticscholar\.org\/paper\/(?:[^/]+\/)?([0-9a-f]{40})/i);
-  if (s2Url?.[1]) {
-    return { arxivId: null, doi: null, s2Id: s2Url[1] };
   }
   return { arxivId: null, doi: null, s2Id: null };
 }
@@ -376,6 +393,21 @@ function formatNote(args: {
   s2Paper: s2.S2Paper | null;
   extraction: PaperExtraction;
 }): string {
+  // Defensive normalization in case LLM extraction returned nullish for some fields
+  const e = args.extraction;
+  const safe = {
+    contribution: typeof e.contribution === "string" ? e.contribution : "",
+    method: {
+      type: e.method?.type ?? "unknown",
+      key_idea: e.method?.key_idea ?? "",
+    },
+    datasets: asStringArray(e.datasets),
+    metrics: asStringArray(e.metrics),
+    key_innovation: typeof e.key_innovation === "string" ? e.key_innovation : "",
+    limitations: asStringArray(e.limitations),
+    concepts: asStringArray(e.concepts),
+  };
+
   const fm = [
     "---",
     `id: ${yamlScalar(args.canonicalId)}`,
@@ -387,7 +419,7 @@ function formatNote(args: {
     args.s2Paper?.venue ? `venue: ${yamlString(args.s2Paper.venue)}` : null,
     args.s2Paper?.citationCount != null ? `citations: ${args.s2Paper.citationCount}` : null,
     `read_at: ${new Date().toISOString().slice(0, 10)}`,
-    `concepts: [${asStringArray(args.extraction.concepts).map(yamlString).join(", ")}]`,
+    `concepts: [${safe.concepts.map(yamlString).join(", ")}]`,
     "---",
   ]
     .filter((line): line is string => line !== null)
@@ -402,33 +434,33 @@ ${args.arxivId ? `[arXiv:${args.arxivId}](https://arxiv.org/abs/${args.arxivId})
 
 ## Contribution
 
-${args.extraction.contribution}
+${safe.contribution || "_not extracted_"}
 
 ## Method
 
-**Type**: ${args.extraction.method.type}
+**Type**: ${safe.method.type}
 
-${args.extraction.method.key_idea}
+${safe.method.key_idea || "_not extracted_"}
 
 ## Key innovation
 
-${args.extraction.key_innovation}
+${safe.key_innovation || "_not extracted_"}
 
 ## Datasets
 
-${args.extraction.datasets.length ? args.extraction.datasets.map((d) => `- ${d}`).join("\n") : "_none specified in abstract_"}
+${safe.datasets.length ? safe.datasets.map((d) => `- ${d}`).join("\n") : "_none specified in abstract_"}
 
 ## Metrics
 
-${args.extraction.metrics.length ? args.extraction.metrics.map((m) => `- ${m}`).join("\n") : "_none specified in abstract_"}
+${safe.metrics.length ? safe.metrics.map((m) => `- ${m}`).join("\n") : "_none specified in abstract_"}
 
 ## Limitations
 
-${args.extraction.limitations.length ? args.extraction.limitations.map((l) => `- ${l}`).join("\n") : "_none stated_"}
+${safe.limitations.length ? safe.limitations.map((l) => `- ${l}`).join("\n") : "_none stated_"}
 
 ## Concepts
 
-${args.extraction.concepts.map((c) => `[[${c}]]`).join(" · ")}
+${safe.concepts.length ? safe.concepts.map((c) => `[[${c}]]`).join(" · ") : "_none extracted_"}
 
 ## Abstract
 

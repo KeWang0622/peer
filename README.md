@@ -98,12 +98,12 @@ Plugins don't share a brain. `prof` has one.
 
 ## Architecture (short version)
 
-Four layers, one SQLite file:
+Four layers, one SQLite file. v0.0.1-alpha populates a subset:
 
-- **L1 Structural**: papers ↔ papers via citations (Semantic Scholar + OpenAlex)
-- **L2 Semantic**: typed nodes & edges, extracted by Claude
-- **L3 Personal**: your markdown notes, Obsidian-compatible
-- **L4 Action history**: every command you ran, queryable _(v1.5)_
+- **L1 Structural**: paper metadata + authors. _Citation edges (`cites`) and OpenAlex fallback land in v0.0.2._
+- **L2 Semantic**: typed nodes (Concept, Method, Dataset, Metric) extracted by Claude per paper read.
+- **L3 Personal**: your markdown notes, Obsidian-compatible.
+- **L4 Action history**: schema exists, not yet populated — v0.0.2.
 
 More details in [docs/architecture.md](docs/architecture.md) (v0.0.2).
 
