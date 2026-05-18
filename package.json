@@ -1,0 +1,67 @@
+{
+  "name": "@kewang/prof",
+  "version": "0.0.1-alpha.0",
+  "description": "Your research operating system. Terminal-native. Onboard a field in 10 minutes.",
+  "keywords": [
+    "research",
+    "academic",
+    "phd",
+    "agent",
+    "ai",
+    "literature",
+    "knowledge-graph",
+    "pi-extension",
+    "tui"
+  ],
+  "license": "Apache-2.0",
+  "author": "Ke Wang <ke@pika.art>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kewang/prof.git"
+  },
+  "homepage": "https://github.com/kewang/prof#readme",
+  "bugs": {
+    "url": "https://github.com/kewang/prof/issues"
+  },
+  "type": "module",
+  "main": "./dist/src/extension.js",
+  "types": "./dist/src/extension.d.ts",
+  "bin": {
+    "prof": "./dist/bin/prof.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./dist/src/extension.js"
+    ]
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsc && bash scripts/copy-assets.sh",
+    "watch": "tsc --watch",
+    "lint": "tsc --noEmit",
+    "test": "npx tsx tests/unit/cluster.test.ts && npx tsx tests/unit/db.test.ts",
+    "prepack": "npm run build",
+    "clean": "rm -rf dist",
+    "demo": "bash scripts/demo.sh"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "@earendil-works/pi-agent-core": "^0.75.0",
+    "@sinclair/typebox": "^0.34.0",
+    "better-sqlite3": "^11.7.0",
+    "openai": "^4.80.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.22.1",
+    "typescript": "^5.7.0"
+  }
+}

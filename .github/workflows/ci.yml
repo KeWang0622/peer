@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: build + test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ["22.x"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Type-check + build
+        run: npm run build
+
+      - name: Unit tests
+        run: |
+          npx tsx tests/unit/cluster.test.ts
+          npx tsx tests/unit/db.test.ts
+
+      - name: Smoke: prof --help and --version
+        run: |
+          node dist/bin/prof.js --version
+          node dist/bin/prof.js --help
