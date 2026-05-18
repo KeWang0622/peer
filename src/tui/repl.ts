@@ -223,7 +223,8 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
   }
 
   // Initial hint
-  console.log(c.dim("type ") + c.bold("help") + c.dim(" for commands · ") + c.bold("Ctrl+D") + c.dim(" to exit"));
+  console.log(c.dim("type a ") + c.bold("command") + c.dim(" (try 'help'), or just ") + c.bold("ask in natural language") + c.dim(" — anything not a command is routed to ask"));
+  console.log(c.dim("Ctrl+D to exit"));
   console.log();
 
   rl.prompt();
@@ -256,17 +257,19 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
       }
 
       const cmd = commands[name];
-      if (!cmd) {
-        const suggestion = suggest(name, Object.keys(commands));
-        console.log(c.bad(`unknown command: ${name}`) + (suggestion ? c.dim(`  (did you mean '${suggestion}'?)`) : ""));
-        rl.prompt();
-        return;
+      if (cmd) {
+        // Suspend prompt during the command (which may stream output)
+        rl.pause();
+        await cmd.run(args);
+        rl.resume();
+      } else {
+        // Not a known command → treat the whole input as a natural-language
+        // question and route it through `ask`. This makes the shell feel
+        // like a chat with your research, not a strict CLI.
+        rl.pause();
+        await commands.ask!.run([line]);
+        rl.resume();
       }
-
-      // Suspend prompt during the command (which may stream output)
-      rl.pause();
-      await cmd.run(args);
-      rl.resume();
     } catch (err) {
       const e = err as Error;
       console.log(c.bad(`error: ${e.message}`));
