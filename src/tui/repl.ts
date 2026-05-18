@@ -1,203 +1,37 @@
 /**
- * Interactive REPL — `prof shell`.
+ * Natural-language REPL for `prof shell`.
  *
- * Drops the user into a colored prompt. They type subcommands without the
- * 'prof' prefix and see streamed output. The same handlers as the CLI
- * binary, just hosted in-process.
+ * This shell is a real pi-agent-core Agent: user text goes straight to the
+ * model, which decides when to call prof's research tools.
  */
 import * as readline from "node:readline";
+import type { AgentEvent, AgentToolResult } from "@earendil-works/pi-agent-core";
+import type { AssistantMessageEvent, ImageContent, TextContent } from "@earendil-works/pi-ai";
+import { createProfAgent } from "../agent/agent.js";
+import { totalCostUsd } from "../lib/llm.js";
 import { c } from "./colors.js";
 import { printWelcome } from "./welcome.js";
-import { countPapers } from "../db/client.js";
-import { totalCostUsd } from "../lib/llm.js";
 
-interface CommandTable {
-  [name: string]: {
-    summary: string;
-    needsArgs?: boolean;
-    run: (args: string[]) => Promise<void>;
-  };
-}
-
-async function buildCommands(verbose: boolean): Promise<CommandTable> {
-  const { profRead } = await import("../commands/read.js");
-  const { cmdMap } = await import("../commands/map.js");
-  const { cmdDoctor } = await import("../commands/doctor.js");
-  const { cmdAsk } = await import("../commands/ask.js");
-  const { cmdDaily } = await import("../commands/daily.js");
-  const { cmdOnboard } = await import("../commands/onboard.js");
-  const { cmdGraph } = await import("../commands/graph.js");
-  const { cmdCite } = await import("../commands/cite.js");
-  const { cmdGap } = await import("../commands/gap.js");
-  const { cmdJournal } = await import("../commands/journal.js");
-  const { cmdCollab } = await import("../commands/collab.js");
-  const { cmdHistory } = await import("../commands/history.js");
-  const { cmdBrainstorm } = await import("../commands/brainstorm.js");
-  const { cmdRelwork } = await import("../commands/relwork.js");
-  const { cmdOutline } = await import("../commands/outline.js");
-  const { cmdCompare } = await import("../commands/compare.js");
-  const { cmdNext } = await import("../commands/next.js");
-
-  const usage = (name: string, hint: string) => () => {
-    console.error(`usage: ${name} ${hint}`);
-  };
-
-  return {
-    onboard: { summary: "first-run setup", run: async () => cmdOnboard({ verbose }) },
-    daily: { summary: "today's top arxiv picks", run: async () => cmdDaily({ verbose }) },
-    read: {
-      summary: "deep-read a paper",
-      needsArgs: true,
-      run: async (a) => {
-        if (a.length === 0) return usage("read", "<arxiv-id|doi|url>")();
-        await profRead(a[0]!, { verbose });
-        console.log(c.dim(`(library: ${countPapers()} papers · session: $${totalCostUsd().toFixed(4)})`));
-      },
-    },
-    map: {
-      summary: "map a field",
-      needsArgs: true,
-      run: async (a) => {
-        const t = a.join(" ").trim();
-        if (!t) return usage("map", '"<topic>"')();
-        await cmdMap(t, { verbose });
-      },
-    },
-    ask: {
-      summary: "cited Q&A over your library",
-      needsArgs: true,
-      run: async (a) => {
-        const q = a.join(" ").trim();
-        if (!q) return usage("ask", '"<question>"')();
-        await cmdAsk(q, { verbose });
-      },
-    },
-    cite: {
-      summary: "find citations + BibTeX",
-      needsArgs: true,
-      run: async (a) => {
-        const claim = a.join(" ").trim();
-        if (!claim) return usage("cite", '"<claim>"')();
-        await cmdCite(claim, { verbose });
-      },
-    },
-    relwork: {
-      summary: "draft a related-work section",
-      needsArgs: true,
-      run: async (a) => {
-        const t = a.join(" ").trim();
-        if (!t) return usage("relwork", '"<topic>"')();
-        await cmdRelwork(t, { verbose });
-      },
-    },
-    outline: {
-      summary: "paper outline with citations",
-      needsArgs: true,
-      run: async (a) => {
-        const t = a.join(" ").trim();
-        if (!t) return usage("outline", '"<topic>"')();
-        await cmdOutline(t, { verbose });
-      },
-    },
-    brainstorm: {
-      summary: "expand a vague idea",
-      needsArgs: true,
-      run: async (a) => {
-        const s = a.join(" ").trim();
-        if (!s) return usage("brainstorm", '"<idea>"')();
-        await cmdBrainstorm(s, { verbose });
-      },
-    },
-    gap: {
-      summary: "find sparse intersections",
-      needsArgs: true,
-      run: async (a) => {
-        const t = a.join(" ").trim();
-        if (!t) return usage("gap", '"<X> and <Y>"')();
-        await cmdGap(t, { verbose });
-      },
-    },
-    next: {
-      summary: "next paper to read for a goal",
-      run: async (a) => {
-        const g = a.join(" ").trim() || null;
-        await cmdNext(g, { verbose });
-      },
-    },
-    compare: {
-      summary: "side-by-side paper comparison",
-      needsArgs: true,
-      run: async (a) => {
-        if (a.length < 2) return usage("compare", "<id1> <id2>")();
-        await cmdCompare(a[0]!, a[1]!, { verbose });
-      },
-    },
-    collab: {
-      summary: "find collaborators",
-      needsArgs: true,
-      run: async (a) => {
-        const t = a.join(" ").trim();
-        if (!t) return usage("collab", '"<topic|author>"')();
-        await cmdCollab(t, { verbose });
-      },
-    },
-    graph: { summary: "open knowledge graph", run: async () => cmdGraph({ verbose }) },
-    journal: {
-      summary: "research diary",
-      run: async (a) => {
-        const read = a[0] === "--read";
-        const rest = read ? a.slice(1) : a;
-        await cmdJournal(rest, { read, verbose });
-      },
-    },
-    history: { summary: "reading trail + stats", run: async () => cmdHistory({ verbose }) },
-    doctor: { summary: "preflight checks", run: async () => { await cmdDoctor(); } },
-  };
-}
-
-function tokenize(line: string): string[] {
-  // Simple shell-like tokenizer: respects "quoted strings"
-  const tokens: string[] = [];
-  let i = 0;
-  while (i < line.length) {
-    while (i < line.length && line[i] === " ") i++;
-    if (i >= line.length) break;
-    if (line[i] === '"' || line[i] === "'") {
-      const quote = line[i]!;
-      i++;
-      let buf = "";
-      while (i < line.length && line[i] !== quote) {
-        buf += line[i];
-        i++;
-      }
-      if (i < line.length) i++; // skip closing quote
-      tokens.push(buf);
-    } else {
-      let buf = "";
-      while (i < line.length && line[i] !== " ") {
-        buf += line[i];
-        i++;
-      }
-      tokens.push(buf);
-    }
-  }
-  return tokens;
-}
+const META_COMMANDS = ["help", "clear", "exit", "quit"] as const;
 
 export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> {
-  const verbose = !!opts.verbose;
+  const agent = createProfAgent({ verbose: !!opts.verbose });
+  const renderer = createEventRenderer();
 
   printWelcome();
+  showHelpHint();
 
-  const commands = await buildCommands(verbose);
+  agent.subscribe((event) => {
+    renderer(event);
+  });
 
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
     completer: (line: string) => {
       const lower = line.toLowerCase();
-      const hits = Object.keys(commands).filter((c) => c.startsWith(lower));
-      return [hits.length ? hits : Object.keys(commands), line] as [string[], string];
+      const hits = META_COMMANDS.filter((cmd) => cmd.startsWith(lower));
+      return [hits.length ? [...hits] : [...META_COMMANDS], line] as [string[], string];
     },
     historySize: 200,
   });
@@ -205,27 +39,19 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
   rl.setPrompt(c.primary("prof ❯ "));
 
   rl.on("close", () => {
+    if (agent.state.isStreaming) agent.abort();
     console.log();
-    console.log(c.dim("research is a journey · session $") + c.dim(totalCostUsd().toFixed(4)));
+    console.log(c.dim("Research is a journey. session $") + c.dim(totalCostUsd().toFixed(4)));
     process.exit(0);
   });
 
-  function showHelp() {
-    console.log();
-    console.log(c.bold("commands:"));
-    for (const [name, def] of Object.entries(commands)) {
-      console.log(`  ${c.accent(name.padEnd(12))} ${c.dim(def.summary)}`);
+  rl.on("SIGINT", () => {
+    if (agent.state.isStreaming) {
+      agent.abort();
+      return;
     }
-    console.log(`  ${c.accent("help".padEnd(12))} ${c.dim("show this list")}`);
-    console.log(`  ${c.accent("clear".padEnd(12))} ${c.dim("clear the screen")}`);
-    console.log(`  ${c.accent("exit".padEnd(12))} ${c.dim("leave the shell (Ctrl+D)")}`);
-    console.log();
-  }
-
-  // Initial hint
-  console.log(c.dim("type a ") + c.bold("command") + c.dim(" (try 'help'), or just ") + c.bold("ask in natural language") + c.dim(" — anything not a command is routed to ask"));
-  console.log(c.dim("Ctrl+D to exit"));
-  console.log();
+    rl.close();
+  });
 
   rl.prompt();
 
@@ -236,68 +62,198 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
       return;
     }
 
-    const tokens = tokenize(line);
-    const name = tokens[0]!.toLowerCase();
-    const args = tokens.slice(1);
+    if (handleMetaCommand(line, rl)) return;
 
+    rl.pause();
     try {
-      if (name === "exit" || name === "quit") {
-        rl.close();
-        return;
-      }
-      if (name === "clear" || name === "cls") {
-        console.clear();
-        rl.prompt();
-        return;
-      }
-      if (name === "help" || name === "?" || name === "h") {
-        showHelp();
-        rl.prompt();
-        return;
-      }
-
-      const cmd = commands[name];
-      if (cmd) {
-        // Suspend prompt during the command (which may stream output)
-        rl.pause();
-        await cmd.run(args);
-        rl.resume();
-      } else {
-        // Not a known command → treat the whole input as a natural-language
-        // question and route it through `ask`. This makes the shell feel
-        // like a chat with your research, not a strict CLI.
-        rl.pause();
-        await commands.ask!.run([line]);
-        rl.resume();
-      }
+      renderer.reset();
+      await agent.prompt(line);
     } catch (err) {
       const e = err as Error;
+      console.log();
       console.log(c.bad(`error: ${e.message}`));
     } finally {
+      rl.resume();
       rl.prompt();
     }
   });
 }
 
-function suggest(input: string, candidates: string[]): string | null {
-  let best: { v: string; d: number } | null = null;
-  for (const c of candidates) {
-    const d = lev(input, c);
-    if (!best || d < best.d) best = { v: c, d };
+function handleMetaCommand(line: string, rl: readline.Interface): boolean {
+  const cmd = line.toLowerCase();
+  if (cmd === "exit" || cmd === "quit") {
+    rl.close();
+    return true;
   }
-  return best && best.d <= 3 ? best.v : null;
+  if (cmd === "clear") {
+    console.clear();
+    printWelcome();
+    showHelpHint();
+    rl.prompt();
+    return true;
+  }
+  if (cmd === "help" || cmd === "?" || cmd === "h") {
+    showHelp();
+    rl.prompt();
+    return true;
+  }
+  return false;
 }
 
-function lev(a: string, b: string): number {
-  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-  const curr = Array.from({ length: b.length + 1 }, () => 0);
-  for (let i = 1; i <= a.length; i++) {
-    curr[0] = i;
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      curr[j] = Math.min(curr[j - 1]! + 1, prev[j]! + 1, prev[j - 1]! + cost);
+function showHelpHint(): void {
+  console.log(c.dim("Ask naturally. Examples:"));
+  console.log(c.dim("  map mechanistic interpretability"));
+  console.log(c.dim("  what should I read next for sparse autoencoders?"));
+  console.log(c.dim("  find citations for scaling laws improve transfer"));
+  console.log();
+  console.log(c.dim("Meta commands: ") + c.bold("help") + c.dim(" / ") + c.bold("clear") + c.dim(" / ") + c.bold("exit"));
+  console.log();
+}
+
+function showHelp(): void {
+  console.log();
+  console.log(c.bold("prof shell"));
+  console.log(c.dim("Natural-language research assistant. The model chooses tools like read_paper, map_field, ask_library, find_citations, find_gap, next_paper, daily_picks, brainstorm_idea, library_status, and list_library."));
+  console.log();
+  console.log(c.bold("Try:"));
+  console.log(`  ${c.accent("read 1706.03762")}`);
+  console.log(`  ${c.accent("map retrieval augmented generation for scientific literature")}`);
+  console.log(`  ${c.accent("what have I read about mechanistic interpretability?")}`);
+  console.log(`  ${c.accent("find a research gap between diffusion models and sparse autoencoders")}`);
+  console.log();
+  console.log(c.bold("Meta:"));
+  console.log(`  ${c.accent("help".padEnd(8))} ${c.dim("show this help")}`);
+  console.log(`  ${c.accent("clear".padEnd(8))} ${c.dim("clear the screen")}`);
+  console.log(`  ${c.accent("exit".padEnd(8))} ${c.dim("leave the shell (Ctrl+D)")}`);
+  console.log();
+}
+
+function createEventRenderer(): ((event: AgentEvent) => void) & { reset: () => void } {
+  let printedAssistantText = false;
+  let printedThinking = false;
+
+  const render = ((event: AgentEvent) => {
+    switch (event.type) {
+      case "agent_start":
+      case "turn_start":
+      case "message_start":
+        break;
+
+      case "message_update":
+        renderMessageUpdate(event.assistantMessageEvent);
+        break;
+
+      case "tool_execution_start":
+        endInlineBlock();
+        console.log(c.dim("tool ") + c.accent(event.toolName) + c.dim(formatArgs(event.args)));
+        break;
+
+      case "tool_execution_update":
+        renderToolResult(event.partialResult);
+        break;
+
+      case "tool_execution_end":
+        renderToolResult(event.result, event.isError);
+        break;
+
+      case "message_end":
+        if (event.message.role === "assistant" && event.message.errorMessage) {
+          endInlineBlock();
+          console.log(c.bad(event.message.errorMessage));
+        }
+        break;
+
+      case "turn_end":
+        break;
+
+      case "agent_end":
+        endInlineBlock();
+        break;
     }
-    for (let j = 0; j <= b.length; j++) prev[j] = curr[j]!;
+  }) as ((event: AgentEvent) => void) & { reset: () => void };
+
+  render.reset = () => {
+    printedAssistantText = false;
+    printedThinking = false;
+  };
+
+  function renderMessageUpdate(event: AssistantMessageEvent): void {
+    switch (event.type) {
+      case "thinking_delta":
+        if (!printedThinking) {
+          process.stdout.write(c.dim("thinking: "));
+          printedThinking = true;
+        }
+        process.stdout.write(c.dim(event.delta));
+        break;
+
+      case "thinking_end":
+        if (printedThinking) process.stdout.write("\n");
+        printedThinking = false;
+        break;
+
+      case "text_delta":
+        if (!printedAssistantText) {
+          process.stdout.write(c.bold("prof: "));
+          printedAssistantText = true;
+        }
+        process.stdout.write(event.delta);
+        break;
+
+      case "toolcall_end":
+        endInlineBlock();
+        console.log(c.dim("requested ") + c.accent(event.toolCall.name) + c.dim(formatArgs(event.toolCall.arguments)));
+        break;
+
+      case "error":
+        endInlineBlock();
+        console.log(c.bad(event.error.errorMessage ?? "model error"));
+        break;
+
+      default:
+        break;
+    }
   }
-  return prev[b.length]!;
+
+  function renderToolResult(result: Partial<AgentToolResult<unknown>> | undefined, isError = false): void {
+    const text = resultText(result);
+    if (!text) return;
+    endInlineBlock();
+    const label = isError ? c.bad("tool error") : c.dim("result");
+    console.log(label + c.dim(": ") + truncate(text, 4_000));
+  }
+
+  function endInlineBlock(): void {
+    if (printedAssistantText || printedThinking) process.stdout.write("\n");
+    printedAssistantText = false;
+    printedThinking = false;
+  }
+
+  return render;
+}
+
+function resultText(result: Partial<AgentToolResult<unknown>> | undefined): string {
+  const content = result?.content;
+  if (!Array.isArray(content)) return "";
+  return content
+    .map((item: TextContent | ImageContent) => {
+      if (item.type === "text") return item.text;
+      return `[image ${item.mimeType}]`;
+    })
+    .join("\n")
+    .trim();
+}
+
+function formatArgs(args: unknown): string {
+  if (!args || (typeof args === "object" && Object.keys(args).length === 0)) return "";
+  try {
+    return ` ${JSON.stringify(args)}`;
+  } catch {
+    return "";
+  }
+}
+
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return text.slice(0, max - 1) + "…";
 }
