@@ -26,24 +26,41 @@ const VERSION = "0.0.1-alpha.0";
 
 function printHelp(): void {
   console.log(`
-prof v${VERSION}  ·  your research operating system
+prof v${VERSION}  ·  research is a journey
 
 USAGE
+  prof                          print welcome + start-here links
   prof <command> [args]
 
 COMMANDS — research is a journey
-  onboard                      first-run setup (profile + seed library)
-  daily                        today's top arxiv papers
-  read    <arxiv-id|doi|url>   deep-read a paper, write a note
-  map     <topic>              map a research field
-  ask     <question>           query your library (RAG with citations)
-  cite    <claim>              find citations for a writing claim
-  gap     <X> and <Y>          find sparse research intersections
-  collab  <topic|author>       find potential collaborators
-  graph                        open knowledge graph in browser
-  journal [<text>]             append/read your research diary
-  history                      show recent reads + spend
-  doctor                       run preflight checks
+
+  start / orient
+    onboard                       tell prof who you are
+    map        <topic>            5-minute field overview + reading list
+    daily                         today's top arxiv picks
+
+  think / brainstorm
+    brainstorm <vague idea>       expand a seed into 3 framings + 5 angles
+    gap        <X> and <Y>        find sparse research intersections
+
+  read / understand
+    read       <arxiv-id|url>     deep-read a paper into your graph
+    ask        <question>         cited Q&A over your library
+    compare    <id1> <id2>        side-by-side paper comparison
+
+  publish / write
+    cite       <claim>            find citations + BibTeX
+    relwork    <topic>            draft a related-work section
+    outline    <topic>            generate a paper outline with citations
+
+  discuss / share
+    collab     <topic|author>     find potential collaborators
+    graph                         open knowledge graph in browser
+
+  reflect / meta
+    journal    [<text>]           append/read your research diary
+    history                       reading trail + spend
+    doctor                        preflight checks
 
 OPTIONS
   --verbose      detailed progress output
@@ -67,6 +84,7 @@ const VALUE_FLAGS = new Set(["limit", "days"]);
 const COMMANDS = new Set([
   "read", "map", "doctor", "daily", "ask", "onboard", "graph",
   "cite", "gap", "journal", "collab", "history",
+  "brainstorm", "relwork", "outline", "compare",
 ]);
 const GLOBAL_FLAGS = new Set(["help", "version"]);
 const ALL_FLAGS = new Set(["help", "version", "verbose", "limit", "days", "read"]);
@@ -83,6 +101,10 @@ const COMMAND_FLAGS: Record<string, Set<string>> = {
   journal: new Set(["help", "version", "verbose", "read", "days"]),
   collab: new Set(["help", "version", "verbose"]),
   history: new Set(["help", "version", "verbose", "days"]),
+  brainstorm: new Set(["help", "version", "verbose"]),
+  relwork: new Set(["help", "version", "verbose"]),
+  outline: new Set(["help", "version", "verbose"]),
+  compare: new Set(["help", "version", "verbose"]),
 };
 
 function parseArgs(argv: string[]): { command: string | null; args: string[]; flags: Record<string, string | boolean> } {
@@ -231,8 +253,14 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (!command || flags.help) {
+  if (flags.help) {
     printHelp();
+    return;
+  }
+
+  if (!command) {
+    const { printWelcome } = await import("../src/tui/welcome.js");
+    printWelcome();
     return;
   }
 
@@ -368,6 +396,49 @@ async function main(): Promise<void> {
       const { cmdHistory } = await import("../src/commands/history.js");
       const days = typeof flags.days === "string" ? parseInt(flags.days, 10) : 30;
       await cmdHistory({ days, verbose });
+      break;
+    }
+
+    case "brainstorm": {
+      const seed = args.join(" ").trim();
+      if (!seed) {
+        console.error('Usage: prof brainstorm "<vague idea>"');
+        process.exit(1);
+      }
+      const { cmdBrainstorm } = await import("../src/commands/brainstorm.js");
+      await cmdBrainstorm(seed, { verbose });
+      break;
+    }
+
+    case "relwork": {
+      const topic = args.join(" ").trim();
+      if (!topic) {
+        console.error('Usage: prof relwork "<topic>"');
+        process.exit(1);
+      }
+      const { cmdRelwork } = await import("../src/commands/relwork.js");
+      await cmdRelwork(topic, { verbose });
+      break;
+    }
+
+    case "outline": {
+      const topic = args.join(" ").trim();
+      if (!topic) {
+        console.error('Usage: prof outline "<topic>"');
+        process.exit(1);
+      }
+      const { cmdOutline } = await import("../src/commands/outline.js");
+      await cmdOutline(topic, { verbose });
+      break;
+    }
+
+    case "compare": {
+      if (args.length < 2) {
+        console.error("Usage: prof compare <id1> <id2>");
+        process.exit(1);
+      }
+      const { cmdCompare } = await import("../src/commands/compare.js");
+      await cmdCompare(args[0]!, args[1]!, { verbose });
       break;
     }
 
