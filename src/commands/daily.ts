@@ -175,6 +175,7 @@ function asArray(value: unknown): string[] {
 function normalizeCategories(value: unknown): string[] {
   return unique(
     asArray(value)
+      .flatMap((item) => item.split(/[,\s]+/))
       .map((item) => item.trim())
       .filter((item) => /^[a-z-]+(?:\.[A-Z]{2})?$/.test(item)),
   );

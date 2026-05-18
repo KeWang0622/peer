@@ -5,6 +5,8 @@
  * Subcommands:
  *   prof read <arxiv-id|doi|url>
  *   prof map  <topic>
+ *   prof cite <claim>
+ *   prof gap  <X> and <Y>
  *   prof doctor
  *   prof daily
  *   prof ask <question>   (stub for v1)
@@ -29,13 +31,19 @@ prof v${VERSION}  ·  your research operating system
 USAGE
   prof <command> [args]
 
-COMMANDS
-  read   <arxiv-id|doi|url>   deep-read a paper, write a note
-  map    <topic>               map a research field (the viral demo)
-  doctor                       run preflight checks
-  ask    <question>            query your library (RAG over your notes)
-  daily                        today's top arxiv papers
+COMMANDS — research is a journey
   onboard                      first-run setup (profile + seed library)
+  daily                        today's top arxiv papers
+  read    <arxiv-id|doi|url>   deep-read a paper, write a note
+  map     <topic>              map a research field
+  ask     <question>           query your library (RAG with citations)
+  cite    <claim>              find citations for a writing claim
+  gap     <X> and <Y>          find sparse research intersections
+  collab  <topic|author>       find potential collaborators
+  graph                        open knowledge graph in browser
+  journal [<text>]             append/read your research diary
+  history                      show recent reads + spend
+  doctor                       run preflight checks
 
 OPTIONS
   --verbose      detailed progress output
@@ -55,10 +63,13 @@ NOTES
 	`);
 }
 
-const VALUE_FLAGS = new Set(["limit"]);
-const COMMANDS = new Set(["read", "map", "doctor", "daily", "ask", "onboard"]);
+const VALUE_FLAGS = new Set(["limit", "days"]);
+const COMMANDS = new Set([
+  "read", "map", "doctor", "daily", "ask", "onboard", "graph",
+  "cite", "gap", "journal", "collab", "history",
+]);
 const GLOBAL_FLAGS = new Set(["help", "version"]);
-const ALL_FLAGS = new Set(["help", "version", "verbose", "limit"]);
+const ALL_FLAGS = new Set(["help", "version", "verbose", "limit", "days", "read"]);
 const COMMAND_FLAGS: Record<string, Set<string>> = {
   read: new Set(["help", "version", "verbose"]),
   map: new Set(["help", "version", "verbose", "limit"]),
@@ -66,6 +77,12 @@ const COMMAND_FLAGS: Record<string, Set<string>> = {
   daily: new Set(["help", "version", "verbose"]),
   ask: new Set(["help", "version", "verbose"]),
   onboard: new Set(["help", "version", "verbose"]),
+  graph: new Set(["help", "version", "verbose"]),
+  cite: new Set(["help", "version", "verbose"]),
+  gap: new Set(["help", "version", "verbose"]),
+  journal: new Set(["help", "version", "verbose", "read", "days"]),
+  collab: new Set(["help", "version", "verbose"]),
+  history: new Set(["help", "version", "verbose", "days"]),
 };
 
 function parseArgs(argv: string[]): { command: string | null; args: string[]; flags: Record<string, string | boolean> } {
@@ -247,6 +264,28 @@ async function main(): Promise<void> {
       break;
     }
 
+    case "cite": {
+      const claim = args.join(" ").trim();
+      if (!claim) {
+        console.error('Usage: prof cite "<claim>"');
+        process.exit(1);
+      }
+      const { cmdCite } = await import("../src/commands/cite.js");
+      await cmdCite(claim, { verbose });
+      break;
+    }
+
+    case "gap": {
+      const topics = args.join(" ").trim();
+      if (!topics) {
+        console.error('Usage: prof gap "<X> and <Y>"');
+        process.exit(1);
+      }
+      const { cmdGap } = await import("../src/commands/gap.js");
+      await cmdGap(topics, { verbose });
+      break;
+    }
+
     case "doctor": {
       const result = await cmdDoctor();
       if (result.failedRequired > 0) {
@@ -275,6 +314,60 @@ async function main(): Promise<void> {
     case "onboard": {
       const { cmdOnboard } = await import("../src/commands/onboard.js");
       await cmdOnboard({ verbose });
+      break;
+    }
+
+    case "graph": {
+      const { cmdGraph } = await import("../src/commands/graph.js");
+      await cmdGraph({ verbose });
+      break;
+    }
+
+    case "cite": {
+      const claim = args.join(" ").trim();
+      if (!claim) {
+        console.error('Usage: prof cite "<claim>"');
+        process.exit(1);
+      }
+      const { cmdCite } = await import("../src/commands/cite.js");
+      await cmdCite(claim, { verbose });
+      break;
+    }
+
+    case "gap": {
+      const topics = args.join(" ").trim();
+      if (!topics) {
+        console.error('Usage: prof gap "<X> and <Y>"');
+        process.exit(1);
+      }
+      const { cmdGap } = await import("../src/commands/gap.js");
+      await cmdGap(topics, { verbose });
+      break;
+    }
+
+    case "journal": {
+      const { cmdJournal } = await import("../src/commands/journal.js");
+      const read = !!flags.read;
+      const days = typeof flags.days === "string" ? parseInt(flags.days, 10) : undefined;
+      await cmdJournal(args, { read, days, verbose });
+      break;
+    }
+
+    case "collab": {
+      const topic = args.join(" ").trim();
+      if (!topic) {
+        console.error('Usage: prof collab "<topic|author>"');
+        process.exit(1);
+      }
+      const { cmdCollab } = await import("../src/commands/collab.js");
+      await cmdCollab(topic, { verbose });
+      break;
+    }
+
+    case "history": {
+      const { cmdHistory } = await import("../src/commands/history.js");
+      const days = typeof flags.days === "string" ? parseInt(flags.days, 10) : 30;
+      await cmdHistory({ days, verbose });
       break;
     }
 
