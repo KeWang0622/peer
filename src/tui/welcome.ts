@@ -112,7 +112,7 @@ export function printWelcome(): void {
   }
 
   console.log();
-  console.log(c.dim("  16 commands across 6 stages of the journey:"));
+  console.log(c.dim("  17 commands across 6 stages of the journey:"));
   console.log(c.dim("  ") + c.primary("orient") + c.dim(" · ") + c.primary("think") + c.dim(" · ") + c.primary("read") + c.dim(" · ") + c.primary("publish") + c.dim(" · ") + c.primary("share") + c.dim(" · ") + c.primary("reflect"));
   console.log();
   console.log(c.dim("  ") + c.bold("prof --help") + c.dim(" for everything · ") + c.bold("prof doctor") + c.dim(" to check your setup"));

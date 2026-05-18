@@ -7,7 +7,7 @@
 ![status](https://img.shields.io/badge/status-alpha-orange)
 ![node](https://img.shields.io/badge/node-22%2B-green)
 ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
-![commands](https://img.shields.io/badge/commands-16-blue)
+![commands](https://img.shields.io/badge/commands-17-blue)
 
 Built on [`pi-agent-core`](https://github.com/earendil-works/pi). Local-first. BYOK. Apache 2.0.
 
@@ -61,7 +61,7 @@ prof onboard
 
 ---
 
-## The 16 commands, by stage of your research journey
+## The 17 commands, by stage of your research journey
 
 ### orient — where am I?
 
