@@ -7,23 +7,18 @@
 import * as readline from "node:readline";
 import type { AgentEvent, AgentToolResult } from "@earendil-works/pi-agent-core";
 import type { AssistantMessageEvent, ImageContent, TextContent } from "@earendil-works/pi-ai";
-import { createProfAgent } from "../agent/agent.js";
+import { buildProfAgent } from "../agent/agent.js";
 import { totalCostUsd } from "../lib/llm.js";
 import { c } from "./colors.js";
 import { printWelcome } from "./welcome.js";
 
-const META_COMMANDS = ["help", "clear", "exit", "quit"] as const;
+const META_COMMANDS = ["help", "clear", "reset", "exit", "quit"] as const;
 
 export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> {
-  const agent = createProfAgent({ verbose: !!opts.verbose });
+  const agent = buildProfAgent({ verbose: !!opts.verbose });
   const renderer = createEventRenderer();
-
-  printWelcome();
-  showHelpHint();
-
-  agent.subscribe((event) => {
-    renderer(event);
-  });
+  let awaitingAgent = false;
+  let exiting = false;
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -36,12 +31,22 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
     historySize: 200,
   });
 
-  rl.setPrompt(c.primary("prof ❯ "));
+  agent.subscribe((event) => {
+    renderer(event);
+    if (event.type === "agent_end" && awaitingAgent && !exiting) {
+      awaitingAgent = false;
+      rl.resume();
+      rl.prompt();
+    }
+  });
+
+  rl.setPrompt(c.primary("you ❯ "));
 
   rl.on("close", () => {
+    exiting = true;
     if (agent.state.isStreaming) agent.abort();
     console.log();
-    console.log(c.dim("Research is a journey. session $") + c.dim(totalCostUsd().toFixed(4)));
+    console.log(c.dim(`research is a journey · session $${totalCostUsd().toFixed(4)}`));
     process.exit(0);
   });
 
@@ -53,33 +58,37 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
     rl.close();
   });
 
+  printWelcome();
+  showHelpHint();
   rl.prompt();
 
-  rl.on("line", async (raw) => {
+  rl.on("line", (raw) => {
     const line = raw.trim();
     if (!line) {
       rl.prompt();
       return;
     }
 
-    if (handleMetaCommand(line, rl)) return;
+    if (handleMetaCommand(line, rl, agent)) return;
 
+    awaitingAgent = true;
     rl.pause();
-    try {
-      renderer.reset();
-      await agent.prompt(line);
-    } catch (err) {
+    renderer.reset();
+    void agent.prompt(line).catch((err: unknown) => {
+      if (exiting) return;
       const e = err as Error;
       console.log();
       console.log(c.bad(`error: ${e.message}`));
-    } finally {
-      rl.resume();
-      rl.prompt();
-    }
+      if (awaitingAgent) {
+        awaitingAgent = false;
+        rl.resume();
+        rl.prompt();
+      }
+    });
   });
 }
 
-function handleMetaCommand(line: string, rl: readline.Interface): boolean {
+function handleMetaCommand(line: string, rl: readline.Interface, agent: ReturnType<typeof buildProfAgent>): boolean {
   const cmd = line.toLowerCase();
   if (cmd === "exit" || cmd === "quit") {
     rl.close();
@@ -87,8 +96,13 @@ function handleMetaCommand(line: string, rl: readline.Interface): boolean {
   }
   if (cmd === "clear") {
     console.clear();
-    printWelcome();
-    showHelpHint();
+    rl.prompt();
+    return true;
+  }
+  if (cmd === "reset") {
+    // Reset only the pi-agent conversation; prof's persisted library stays intact.
+    agent.reset();
+    console.log(c.dim("session reset"));
     rl.prompt();
     return true;
   }
@@ -106,7 +120,16 @@ function showHelpHint(): void {
   console.log(c.dim("  what should I read next for sparse autoencoders?"));
   console.log(c.dim("  find citations for scaling laws improve transfer"));
   console.log();
-  console.log(c.dim("Meta commands: ") + c.bold("help") + c.dim(" / ") + c.bold("clear") + c.dim(" / ") + c.bold("exit"));
+  console.log(
+    c.dim("Meta commands: ") +
+      c.bold("help") +
+      c.dim(" / ") +
+      c.bold("clear") +
+      c.dim(" / ") +
+      c.bold("reset") +
+      c.dim(" / ") +
+      c.bold("exit"),
+  );
   console.log();
 }
 
@@ -124,6 +147,7 @@ function showHelp(): void {
   console.log(c.bold("Meta:"));
   console.log(`  ${c.accent("help".padEnd(8))} ${c.dim("show this help")}`);
   console.log(`  ${c.accent("clear".padEnd(8))} ${c.dim("clear the screen")}`);
+  console.log(`  ${c.accent("reset".padEnd(8))} ${c.dim("clear this agent conversation")}`);
   console.log(`  ${c.accent("exit".padEnd(8))} ${c.dim("leave the shell (Ctrl+D)")}`);
   console.log();
 }

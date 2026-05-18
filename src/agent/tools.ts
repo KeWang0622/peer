@@ -5,13 +5,13 @@
  * Tools that print to stdout (most of them) capture output into a string
  * and return it as the tool result, so the agent can see what happened.
  */
-import { Type, type Static, type TSchema } from "@sinclair/typebox";
+import { Type, type TSchema } from "@sinclair/typebox";
 import type { AgentTool, AgentToolResult } from "@earendil-works/pi-agent-core";
 import { db, countPapers, type PaperRow } from "../db/client.js";
 
 // Shortcuts to make tool definitions terse + properly typed.
-type AnyTool = AgentTool<TSchema, unknown>;
-type ToolResult = AgentToolResult<unknown>;
+type ProfTool = AgentTool<TSchema, null>;
+type ToolResult = AgentToolResult<null>;
 
 /** Capture console.log output during a callback. */
 async function captureStdout(fn: () => Promise<unknown> | unknown): Promise<string> {
@@ -33,11 +33,11 @@ function asText(text: string): ToolResult {
   return { content: [{ type: "text", text: text.slice(0, 20_000) }], details: null };
 }
 
-function defineTool<S extends TSchema>(t: AgentTool<S, unknown>): AnyTool {
-  return t as unknown as AnyTool;
+function defineTool<S extends TSchema>(tool: AgentTool<S, null>): ProfTool {
+  return tool as unknown as ProfTool;
 }
 
-export function buildProfTools(verbose: boolean = false): AnyTool[] {
+export function buildProfTools(verbose: boolean = false): ProfTool[] {
   return [
     defineTool({
       name: "read_paper",
@@ -47,7 +47,7 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
       parameters: Type.Object({
         id: Type.String({ description: "arxiv id like '1706.03762', DOI like '10.x/y', or full URL" }),
       }),
-      execute: async (_id, params: any) => {
+      execute: async (_id, params) => {
         const { profRead } = await import("../commands/read.js");
         const out = await captureStdout(async () => {
           const r = await profRead(params.id, { verbose });
@@ -58,7 +58,7 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
         return asText(out);
       },
     }),
-    {
+    defineTool({
       name: "map_field",
       label: "Map field",
       description:
@@ -67,13 +67,13 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
         topic: Type.String({ description: "The research topic, e.g. 'mechanistic interpretability'" }),
         limit: Type.Optional(Type.Number({ description: "Max papers to seed from (default 50)" })),
       }),
-      execute: async (_id, params: any) => {
+      execute: async (_id, params) => {
         const { cmdMap } = await import("../commands/map.js");
         const out = await captureStdout(() => cmdMap(params.topic, { limit: params.limit, verbose }));
         return asText(out);
       },
-    },
-    {
+    }),
+    defineTool({
       name: "ask_library",
       label: "Ask library",
       description:
@@ -81,7 +81,7 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
       parameters: Type.Object({
         question: Type.String({ description: "The research question" }),
       }),
-      execute: async (_id, params: any) => {
+      execute: async (_id, params) => {
         if (countPapers() === 0) {
           return asText(
             "The user's library is empty. Suggest they run `prof read <arxiv-id>` to seed their library first, or use `map_field` to learn about a topic from scratch.",
@@ -91,8 +91,8 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
         const out = await captureStdout(() => cmdAsk(params.question, { verbose }));
         return asText(out);
       },
-    },
-    {
+    }),
+    defineTool({
       name: "find_citations",
       label: "Find citations",
       description:
@@ -100,13 +100,13 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
       parameters: Type.Object({
         claim: Type.String({ description: "The claim that needs citations" }),
       }),
-      execute: async (_id, params: any) => {
+      execute: async (_id, params) => {
         const { cmdCite } = await import("../commands/cite.js");
         const out = await captureStdout(() => cmdCite(params.claim, { verbose }));
         return asText(out);
       },
-    },
-    {
+    }),
+    defineTool({
       name: "find_gap",
       label: "Find gap",
       description:
@@ -114,13 +114,13 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
       parameters: Type.Object({
         topics: Type.String({ description: "Two or more concepts, e.g. 'sparse autoencoders and diffusion models'" }),
       }),
-      execute: async (_id, params: any) => {
+      execute: async (_id, params) => {
         const { cmdGap } = await import("../commands/gap.js");
         const out = await captureStdout(() => cmdGap(params.topics, { verbose }));
         return asText(out);
       },
-    },
-    {
+    }),
+    defineTool({
       name: "next_paper",
       label: "Next paper to read",
       description:
@@ -130,13 +130,13 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
           Type.String({ description: "The research goal. If omitted, continues the most recent active trail." }),
         ),
       }),
-      execute: async (_id, params: any) => {
+      execute: async (_id, params) => {
         const { cmdNext } = await import("../commands/next.js");
         const out = await captureStdout(() => cmdNext(params.goal ?? null, { verbose }));
         return asText(out);
       },
-    },
-    {
+    }),
+    defineTool({
       name: "daily_picks",
       label: "Daily picks",
       description:
@@ -147,8 +147,8 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
         const out = await captureStdout(() => cmdDaily({ verbose }));
         return asText(out);
       },
-    },
-    {
+    }),
+    defineTool({
       name: "brainstorm_idea",
       label: "Brainstorm",
       description:
@@ -156,13 +156,13 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
       parameters: Type.Object({
         seed: Type.String({ description: "The vague idea or seed thought" }),
       }),
-      execute: async (_id, params: any) => {
+      execute: async (_id, params) => {
         const { cmdBrainstorm } = await import("../commands/brainstorm.js");
         const out = await captureStdout(() => cmdBrainstorm(params.seed, { verbose }));
         return asText(out);
       },
-    },
-    {
+    }),
+    defineTool({
       name: "library_status",
       label: "Library status",
       description:
@@ -173,8 +173,8 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
         const out = await captureStdout(() => cmdHistory({ verbose }));
         return asText(out);
       },
-    },
-    {
+    }),
+    defineTool({
       name: "list_library",
       label: "List library",
       description: "Plain list of papers in the user's library. Used by the LLM as a sanity check, not user-facing.",
@@ -190,6 +190,6 @@ export function buildProfTools(verbose: boolean = false): AnyTool[] {
           rows.map((r, i) => `${i + 1}. ${r.title} (${r.year ?? "?"})${r.arxiv_id ? ` arxiv:${r.arxiv_id}` : ""}`).join("\n"),
         );
       },
-    },
+    }),
   ];
 }
