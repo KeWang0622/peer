@@ -63,6 +63,9 @@ COMMANDS — research is a journey
     history                       reading trail + spend
     doctor                        preflight checks
 
+  interactive
+    shell                         drop into the interactive TUI shell
+
 OPTIONS
   --verbose      detailed progress output
   --limit <n>    paper limit for map / search
@@ -85,7 +88,7 @@ const VALUE_FLAGS = new Set(["limit", "days"]);
 const COMMANDS = new Set([
   "read", "map", "doctor", "daily", "ask", "onboard", "graph",
   "cite", "gap", "journal", "collab", "history",
-  "brainstorm", "relwork", "outline", "compare", "next",
+  "brainstorm", "relwork", "outline", "compare", "next", "shell",
 ]);
 const GLOBAL_FLAGS = new Set(["help", "version"]);
 const ALL_FLAGS = new Set(["help", "version", "verbose", "limit", "days", "read"]);
@@ -107,6 +110,7 @@ const COMMAND_FLAGS: Record<string, Set<string>> = {
   outline: new Set(["help", "version", "verbose"]),
   compare: new Set(["help", "version", "verbose"]),
   next: new Set(["help", "version", "verbose"]),
+  shell: new Set(["help", "version", "verbose"]),
 };
 
 function parseArgs(argv: string[]): { command: string | null; args: string[]; flags: Record<string, string | boolean> } {
@@ -402,11 +406,7 @@ async function main(): Promise<void> {
     }
 
     case "brainstorm": {
-      const seed = args.join(" ").trim();
-      if (!seed) {
-        console.error('Usage: prof brainstorm "<vague idea>"');
-        process.exit(1);
-      }
+      const seed = args.join(" ").trim() || null;
       const { cmdBrainstorm } = await import("../src/commands/brainstorm.js");
       await cmdBrainstorm(seed, { verbose });
       break;
@@ -448,6 +448,12 @@ async function main(): Promise<void> {
       const goal = args.join(" ").trim() || null;
       const { cmdNext } = await import("../src/commands/next.js");
       await cmdNext(goal, { verbose });
+      break;
+    }
+
+    case "shell": {
+      const { cmdShell } = await import("../src/tui/repl.js");
+      await cmdShell({ verbose });
       break;
     }
 

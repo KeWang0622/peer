@@ -5,14 +5,44 @@
  * expands it into 5-10 concrete framings + adjacent questions, with
  * grounding from your library if available.
  */
+import * as readline from "node:readline";
 import { complete, MODELS, totalCostUsd } from "../lib/llm.js";
 import { retrieve } from "../algorithms/rag.js";
 import { countPapers } from "../db/client.js";
 import { c } from "../tui/colors.js";
 
-export async function cmdBrainstorm(seed: string, opts: { verbose?: boolean } = {}): Promise<void> {
+async function promptForSeed(): Promise<string> {
+  console.log();
+  console.log(c.primary("brainstorm — what's swirling around?"));
+  console.log();
+  console.log(c.dim("examples:"));
+  console.log(c.dim("  · 'something with diffusion models and interpretability'"));
+  console.log(c.dim("  · 'what if SAEs could be trained jointly with the base model'"));
+  console.log(c.dim("  · 'I want to apply RL to a non-text domain'"));
+  console.log();
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await new Promise<string>((resolve) => {
+    rl.question(c.bold("seed ▸ "), (a) => {
+      rl.close();
+      resolve(a);
+    });
+  });
+  return answer.trim();
+}
+
+export async function cmdBrainstorm(seedArg: string | null, opts: { verbose?: boolean } = {}): Promise<void> {
   const log = (m: string) => opts.verbose && console.log(c.dim(`  · ${m}`));
   const costBefore = totalCostUsd();
+
+  // If no seed, prompt for one interactively
+  let seed = (seedArg ?? "").trim();
+  if (!seed) {
+    seed = await promptForSeed();
+    if (!seed) {
+      console.log(c.dim("(no idea — try `prof map \"<topic>\"` to learn a field first)"));
+      return;
+    }
+  }
 
   console.log();
   console.log(c.primary("brainstorm: ") + c.italic(seed));
