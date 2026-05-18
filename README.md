@@ -77,6 +77,7 @@ prof onboard
 |---|---|
 | `prof brainstorm "<vague idea>"` | You have a half-formed thought. Expand into 3 framings + 5 adjacent angles. |
 | `prof gap "<X> and <Y>"` | Looking for a thesis topic. Find sparse intersections + concrete questions. |
+| `prof next "<goal>"` | "What should I read next toward X?" Picks one paper + alternates. Persists as a trail — re-run to continue. |
 
 ### read — going deep
 

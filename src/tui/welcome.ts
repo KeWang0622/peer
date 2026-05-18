@@ -3,8 +3,33 @@
  */
 import * as fs from "node:fs";
 import { paths } from "../config/paths.js";
-import { countPapers } from "../db/client.js";
+import { countPapers, db } from "../db/client.js";
 import { c } from "./colors.js";
+
+interface TrailRow {
+  id: string;
+  goal: string;
+  total_steps: number;
+  done_steps: number;
+}
+
+function activeTrails(): TrailRow[] {
+  try {
+    return db()
+      .prepare<[], TrailRow>(
+        `SELECT t.id, t.goal,
+            (SELECT COUNT(*) FROM trail_steps s WHERE s.trail_id = t.id) as total_steps,
+            (SELECT COUNT(*) FROM trail_steps s WHERE s.trail_id = t.id AND s.status='done') as done_steps
+         FROM trails t
+         WHERE t.status='active'
+         ORDER BY t.created_at DESC
+         LIMIT 3`,
+      )
+      .all();
+  } catch {
+    return [];
+  }
+}
 
 interface ProfileSummary {
   name?: string;
@@ -66,11 +91,22 @@ export function printWelcome(): void {
     console.log("    " + c.accent('prof map "<topic>"') + c.dim("              jump straight in — map a field in 5 min"));
     console.log("    " + c.accent("prof brainstorm \"<idea>\"") + c.dim("        expand a vague idea"));
   } else {
+    const trails = activeTrails();
+    if (trails.length > 0) {
+      console.log(c.bold("  your active trails:") + "\n");
+      for (const t of trails) {
+        const progress = `${t.done_steps}/${t.total_steps}`;
+        console.log("    " + c.accent("▸ ") + c.bold(truncate(t.goal, 50)) + c.dim(`   ${progress} steps`));
+      }
+      console.log("    " + c.dim("    ") + c.bold("prof next") + c.dim(" to continue · ") + c.bold("prof read <id>") + c.dim(" to mark done"));
+      console.log();
+    }
+
     console.log(c.bold("  continue your journey:") + "\n");
     console.log("    " + c.accent("prof daily") + c.dim("                      today's top arxiv picks"));
     console.log("    " + c.accent("prof read <arxiv-id>") + c.dim("            deep-read a paper"));
     console.log("    " + c.accent('prof ask "<question>"') + c.dim("           cited Q&A over your library"));
-    console.log("    " + c.accent('prof cite "<claim>"') + c.dim("             find citations + BibTeX"));
+    console.log("    " + c.accent('prof next "<goal>"') + c.dim("              what to read next, toward a goal"));
     console.log("    " + c.accent("prof graph") + c.dim("                      open your knowledge graph"));
     console.log("    " + c.accent("prof journal") + c.dim("                    write a journey note"));
   }
@@ -85,4 +121,8 @@ export function printWelcome(): void {
 
 function stripAnsiLen(s: string): number {
   return s.replace(/\x1b\[[0-9;]*m/g, "").length;
+}
+
+function truncate(s: string, n: number): string {
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
