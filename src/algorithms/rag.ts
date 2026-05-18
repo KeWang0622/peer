@@ -123,17 +123,29 @@ export async function retrieve(query: string, opts: RetrievalOptions = {}): Prom
     };
   }
 
-  const chunks = library.map(paperChunk);
-  onProgress("embedding", `${chunks.length + 1} chunks (query + library)`);
-  const { vectors, cost: embedCost } = await embed([query, ...chunks]);
+  const { embedCached, embedOneCached } = await import("../db/embeddings-cache.js");
+  const { totalCostUsd } = await import("../lib/llm.js");
+  const costBefore = totalCostUsd();
 
-  const queryVec = vectors[0];
-  if (!queryVec) {
-    throw new Error("Embedding returned no query vector");
-  }
+  // 1. Cache-aware library embeddings (only misses get embedded)
+  const libraryItems = library.map((p) => ({ id: p.id, text: paperChunk(p) }));
+  onProgress("embedding", `${libraryItems.length} library chunks (cache-aware)`);
+  const libVecs = await embedCached("paper-title-abstract", libraryItems);
 
-  const scored: RetrievedPaper[] = library.map((paper, i) => {
-    const chunkVec = vectors[i + 1] ?? [];
+  // 2. Query embedding — cached by content hash of the query text
+  const queryHash = "q:" + query.slice(0, 64);
+  const queryVec = await embedOneCached("query", queryHash, query);
+
+  const embedCostUsd = totalCostUsd() - costBefore;
+  const embedCost = {
+    model: "text-embedding-3-small",
+    inputTokens: 0,
+    outputTokens: 0,
+    costUsd: embedCostUsd,
+  };
+
+  const scored: RetrievedPaper[] = library.map((paper) => {
+    const chunkVec = libVecs.get(paper.id) ?? [];
     return {
       paper,
       score: cosineSimilarity(queryVec, chunkVec),

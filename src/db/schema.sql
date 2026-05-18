@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS semantic_edges (
 );
 
 -- ============================================================
--- L4 ACTION HISTORY (stub for v1.5)
+-- L4 ACTION HISTORY (event log of every command + outputs)
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS actions (
@@ -157,6 +157,47 @@ CREATE TABLE IF NOT EXISTS actions (
 
 CREATE INDEX IF NOT EXISTS idx_actions_ts ON actions(ts);
 CREATE INDEX IF NOT EXISTS idx_actions_type ON actions(type);
+
+-- ============================================================
+-- Embedding cache (eliminates re-embedding library on every prof ask)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS embeddings (
+  -- subject_type ∈ {'paper-title-abstract','concept','query'}; subject_id = paper.id or concept.id or hash(query)
+  subject_type    TEXT NOT NULL,
+  subject_id      TEXT NOT NULL,
+  model           TEXT NOT NULL,              -- e.g. 'text-embedding-3-small'
+  content_hash    TEXT NOT NULL,              -- sha256 of input text (for invalidation)
+  vector          BLOB NOT NULL,              -- Float32 packed array
+  created_at      INTEGER NOT NULL,
+  PRIMARY KEY (subject_type, subject_id, model)
+);
+
+CREATE INDEX IF NOT EXISTS idx_embeddings_subject ON embeddings(subject_type, subject_id);
+
+-- ============================================================
+-- Reading trails (prof next)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS trails (
+  id              TEXT PRIMARY KEY,
+  goal            TEXT NOT NULL,
+  created_at      INTEGER NOT NULL,
+  status          TEXT DEFAULT 'active'       -- 'active' | 'archived'
+);
+
+CREATE TABLE IF NOT EXISTS trail_steps (
+  trail_id        TEXT NOT NULL,
+  position        INTEGER NOT NULL,
+  paper_id        TEXT NOT NULL,
+  why             TEXT,
+  status          TEXT DEFAULT 'queued',      -- 'queued' | 'reading' | 'done' | 'skipped'
+  added_at        INTEGER NOT NULL,
+  completed_at    INTEGER,
+  PRIMARY KEY (trail_id, position),
+  FOREIGN KEY (trail_id) REFERENCES trails(id) ON DELETE CASCADE,
+  FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+);
 
 -- ============================================================
 -- Meta / housekeeping

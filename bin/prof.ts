@@ -22,7 +22,7 @@ import { paths } from "../src/config/paths.js";
 import { countPapers } from "../src/db/client.js";
 import { totalCostUsd } from "../src/lib/llm.js";
 
-const VERSION = "0.0.1-alpha.0";
+const VERSION = "0.0.1-alpha.3";
 
 function printHelp(): void {
   console.log(`
@@ -42,6 +42,7 @@ COMMANDS — research is a journey
   think / brainstorm
     brainstorm <vague idea>       expand a seed into 3 framings + 5 angles
     gap        <X> and <Y>        find sparse research intersections
+    next       <goal>             one recommended next paper (continues a trail)
 
   read / understand
     read       <arxiv-id|url>     deep-read a paper into your graph
@@ -84,7 +85,7 @@ const VALUE_FLAGS = new Set(["limit", "days"]);
 const COMMANDS = new Set([
   "read", "map", "doctor", "daily", "ask", "onboard", "graph",
   "cite", "gap", "journal", "collab", "history",
-  "brainstorm", "relwork", "outline", "compare",
+  "brainstorm", "relwork", "outline", "compare", "next",
 ]);
 const GLOBAL_FLAGS = new Set(["help", "version"]);
 const ALL_FLAGS = new Set(["help", "version", "verbose", "limit", "days", "read"]);
@@ -105,6 +106,7 @@ const COMMAND_FLAGS: Record<string, Set<string>> = {
   relwork: new Set(["help", "version", "verbose"]),
   outline: new Set(["help", "version", "verbose"]),
   compare: new Set(["help", "version", "verbose"]),
+  next: new Set(["help", "version", "verbose"]),
 };
 
 function parseArgs(argv: string[]): { command: string | null; args: string[]; flags: Record<string, string | boolean> } {
@@ -439,6 +441,13 @@ async function main(): Promise<void> {
       }
       const { cmdCompare } = await import("../src/commands/compare.js");
       await cmdCompare(args[0]!, args[1]!, { verbose });
+      break;
+    }
+
+    case "next": {
+      const goal = args.join(" ").trim() || null;
+      const { cmdNext } = await import("../src/commands/next.js");
+      await cmdNext(goal, { verbose });
       break;
     }
 
