@@ -5,14 +5,17 @@
  * Subcommands:
  *   prof read <arxiv-id|doi|url>
  *   prof map  <topic>
- *   prof daily   (stub for v1)
+ *   prof doctor
+ *   prof daily
  *   prof ask <question>   (stub for v1)
  *   prof onboard --scholar <url>   (stub for v1)
  *
  * No subcommand → print help + version.
  */
+import "../src/lib/process-warnings.js";
 import { profRead } from "../src/commands/read.js";
 import { cmdMap } from "../src/commands/map.js";
+import { cmdDoctor } from "../src/commands/doctor.js";
 import { paths } from "../src/config/paths.js";
 import { countPapers } from "../src/db/client.js";
 import { totalCostUsd } from "../src/lib/llm.js";
@@ -29,9 +32,10 @@ USAGE
 COMMANDS
   read   <arxiv-id|doi|url>   deep-read a paper, write a note
   map    <topic>               map a research field (the viral demo)
-  daily                        today's top arxiv papers   (v1.5)
-  ask    <question>            query your library         (v1.5)
-  onboard                      first-run setup            (v1.5)
+  doctor                       run preflight checks
+  ask    <question>            query your library (RAG over your notes)
+  daily                        today's top arxiv papers
+  onboard                      first-run setup (profile + seed library)
 
 OPTIONS
   --verbose      detailed progress output
@@ -48,8 +52,21 @@ ENV
 NOTES
   All data is local at ${paths.home()}
   Apache 2.0, BYOK. https://github.com/kewang/prof
-`);
+	`);
 }
+
+const VALUE_FLAGS = new Set(["limit"]);
+const COMMANDS = new Set(["read", "map", "doctor", "daily", "ask", "onboard"]);
+const GLOBAL_FLAGS = new Set(["help", "version"]);
+const ALL_FLAGS = new Set(["help", "version", "verbose", "limit"]);
+const COMMAND_FLAGS: Record<string, Set<string>> = {
+  read: new Set(["help", "version", "verbose"]),
+  map: new Set(["help", "version", "verbose", "limit"]),
+  doctor: new Set(["help", "version", "verbose"]),
+  daily: new Set(["help", "version", "verbose"]),
+  ask: new Set(["help", "version", "verbose"]),
+  onboard: new Set(["help", "version", "verbose"]),
+};
 
 function parseArgs(argv: string[]): { command: string | null; args: string[]; flags: Record<string, string | boolean> } {
   const flags: Record<string, string | boolean> = {};
@@ -65,15 +82,32 @@ function parseArgs(argv: string[]): { command: string | null; args: string[]; fl
       flags.version = true;
       i++;
     } else if (a.startsWith("--")) {
-      const key = a.slice(2);
-      const next = argv[i + 1];
-      if (next && !next.startsWith("--")) {
-        flags[key] = next;
-        i += 2;
+      const raw = a.slice(2);
+      const eq = raw.indexOf("=");
+      const key = eq === -1 ? raw : raw.slice(0, eq);
+      if (!key) {
+        i++;
+        continue;
+      }
+      if (eq !== -1) {
+        flags[key] = raw.slice(eq + 1);
+        i++;
+      } else if (VALUE_FLAGS.has(key)) {
+        const next = argv[i + 1];
+        if (next && !next.startsWith("-")) {
+          flags[key] = next;
+          i += 2;
+        } else {
+          flags[key] = true;
+          i++;
+        }
       } else {
         flags[key] = true;
         i++;
       }
+    } else if (a.startsWith("-") && a !== "-") {
+      flags[a.slice(1)] = true;
+      i++;
     } else if (!command) {
       command = a;
       i++;
@@ -85,9 +119,95 @@ function parseArgs(argv: string[]): { command: string | null; args: string[]; fl
   return { command, args, flags };
 }
 
+function validateCommand(command: string | null): void {
+  if (!command || COMMANDS.has(command)) return;
+
+  const suggestion = suggest(command, [...COMMANDS]);
+  console.error(`Unknown command: ${command}${suggestion ? `. Did you mean '${suggestion}'?` : ""}`);
+  printHelp();
+  process.exit(1);
+}
+
+function validateFlags(command: string | null, flags: Record<string, string | boolean>): void {
+  for (const key of Object.keys(flags)) {
+    if (!ALL_FLAGS.has(key)) {
+      printFlagError(key, [...ALL_FLAGS]);
+    }
+  }
+
+  const allowed = !command ? GLOBAL_FLAGS : COMMANDS.has(command) ? COMMAND_FLAGS[command]! : ALL_FLAGS;
+  for (const key of Object.keys(flags)) {
+    if (!allowed.has(key)) {
+      printFlagError(key, [...allowed]);
+    }
+  }
+}
+
+function printFlagError(key: string, candidates: string[]): never {
+  const flag = formatFlag(key);
+  const suggestion = suggest(key, candidates);
+  console.error(`Unknown flag: ${flag}${suggestion ? `. Did you mean ${formatFlag(suggestion)}?` : ""}`);
+  process.exit(1);
+}
+
+function formatFlag(key: string): string {
+  return key.length === 1 ? `-${key}` : `--${key}`;
+}
+
+function suggest(input: string, candidates: string[]): string | null {
+  let best: { value: string; distance: number } | null = null;
+  for (const candidate of candidates) {
+    const distance = levenshtein(input, candidate);
+    if (!best || distance < best.distance) {
+      best = { value: candidate, distance };
+    }
+  }
+  return best && best.distance <= 3 ? best.value : null;
+}
+
+function levenshtein(a: string, b: string): number {
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const curr = Array.from({ length: b.length + 1 }, () => 0);
+
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(
+        curr[j - 1]! + 1,
+        prev[j]! + 1,
+        prev[j - 1]! + cost,
+      );
+    }
+    for (let j = 0; j <= b.length; j++) {
+      prev[j] = curr[j]!;
+    }
+  }
+
+  return prev[b.length]!;
+}
+
+function parseLimit(value: string | boolean | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") {
+    console.error("Missing value for --limit");
+    process.exit(1);
+  }
+
+  const n = parseInt(value, 10);
+  if (!Number.isFinite(n) || n <= 0 || n > 500) {
+    console.error(`Invalid --limit value: ${value} (must be 1..500)`);
+    process.exit(1);
+  }
+  return n;
+}
+
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const { command, args, flags } = parseArgs(argv);
+
+  validateFlags(command, flags);
+  validateCommand(command);
 
   if (flags.version) {
     console.log(`prof ${VERSION}`);
@@ -100,15 +220,7 @@ async function main(): Promise<void> {
   }
 
   const verbose = !!flags.verbose;
-  let limit: number | undefined;
-  if (typeof flags.limit === "string") {
-    const n = parseInt(flags.limit, 10);
-    if (!Number.isFinite(n) || n <= 0 || n > 500) {
-      console.error(`Invalid --limit value: ${flags.limit} (must be 1..500)`);
-      process.exit(1);
-    }
-    limit = n;
-  }
+  const limit = parseLimit(flags.limit);
 
   switch (command) {
     case "read": {
@@ -135,13 +247,36 @@ async function main(): Promise<void> {
       break;
     }
 
-    case "daily":
-    case "ask":
-    case "onboard":
-      console.log(`'${command}' is coming in v1.5. For now, try:`);
-      console.log("  prof map \"<topic>\"");
-      console.log("  prof read <arxiv-id>");
+    case "doctor": {
+      const result = await cmdDoctor();
+      if (result.failedRequired > 0) {
+        process.exit(1);
+      }
       break;
+    }
+
+    case "ask": {
+      const question = args.join(" ").trim();
+      if (!question) {
+        console.error('Usage: prof ask "<question>"');
+        process.exit(1);
+      }
+      const { cmdAsk } = await import("../src/commands/ask.js");
+      await cmdAsk(question, { verbose });
+      break;
+    }
+
+    case "daily": {
+      const { cmdDaily } = await import("../src/commands/daily.js");
+      await cmdDaily({ verbose });
+      break;
+    }
+
+    case "onboard": {
+      const { cmdOnboard } = await import("../src/commands/onboard.js");
+      await cmdOnboard({ verbose });
+      break;
+    }
 
     default:
       console.error(`Unknown command: ${command}`);

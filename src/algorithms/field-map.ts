@@ -15,6 +15,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { paths, ensureDirs } from "../config/paths.js";
 import * as s2 from "../api/semantic-scholar.js";
+import * as oa from "../api/openalex.js";
 import { embed, complete, MODELS } from "../lib/llm.js";
 import { cluster, clusterCentroidMember, suggestedK } from "./cluster.js";
 import { upsertPaper, paperCanonicalId } from "../db/client.js";
@@ -45,17 +46,48 @@ export async function profMap(
   const outputDir = path.join(paths.fieldsNotes(), slug);
   fs.mkdirSync(outputDir, { recursive: true });
 
-  // ---- Step 1: seed search ----
-  onProgress("searching", "Semantic Scholar");
+  // ---- Step 1: seed search (S2 → OpenAlex fallback on rate-limit/failure) ----
   const limit = opts.limit ?? 100;
-  const seedSearch = await s2.searchPapers(topic, { limit: Math.min(limit, 100) });
-  const seedPapers = seedSearch.data.filter((p) => p.abstract && p.abstract.length > 100);
-
-  if (seedPapers.length < 5) {
-    throw new Error(`Too few papers found for "${topic}". Try a broader query.`);
+  let seedPapers: s2.S2Paper[] = [];
+  try {
+    onProgress("searching", "Semantic Scholar");
+    const seedSearch = await s2.searchPapers(topic, { limit: Math.min(limit, 100) });
+    seedPapers = seedSearch.data.filter((p) => p.abstract && p.abstract.length > 100);
+  } catch (err) {
+    const msg = (err as Error).message;
+    onProgress("s2-failed", `${msg.slice(0, 80)} — falling back to OpenAlex`);
   }
 
-  onProgress("seeded", `${seedPapers.length} papers found`);
+  if (seedPapers.length < 5) {
+    onProgress("searching", "OpenAlex (fallback)");
+    const oaResp = await oa.searchWorks(topic, { perPage: Math.min(limit, 50) });
+    // Convert OpenAlex works → minimal S2Paper shape so the rest of the pipeline doesn't change
+    seedPapers = oaResp.results
+      .map((w): s2.S2Paper => ({
+        paperId: w.id.replace(/^https?:\/\/openalex\.org\//, "oa-"),
+        externalIds: {
+          DOI: oa.doiFromOA(w) ?? undefined,
+          ArXiv: oa.arxivIdFromOA(w) ?? undefined,
+        },
+        title: w.title ?? w.display_name ?? "(untitled)",
+        abstract: oa.abstractFromInvertedIndex(w.abstract_inverted_index) ?? null,
+        year: w.publication_year ?? null,
+        venue: w.primary_location?.source?.display_name ?? null,
+        citationCount: w.cited_by_count ?? 0,
+        referenceCount: 0,
+        authors: (w.authorships ?? []).map((a) => ({
+          authorId: a.author.id ?? null,
+          name: a.author.display_name,
+        })),
+      }))
+      .filter((p) => p.abstract && p.abstract.length > 100);
+  }
+
+  if (seedPapers.length < 5) {
+    throw new Error(`Too few papers found for "${topic}" (got ${seedPapers.length}). Try a broader query.`);
+  }
+
+  onProgress("seeded", `${seedPapers.length} papers`);
 
   // Also fetch survey-flavored papers (heuristic)
   onProgress("surveys", "Searching for surveys");
