@@ -22,7 +22,7 @@ import { paths } from "../src/config/paths.js";
 import { countPapers } from "../src/db/client.js";
 import { totalCostUsd } from "../src/lib/llm.js";
 
-const VERSION = "0.0.1-alpha.3";
+const VERSION = "0.0.1-alpha.5";
 
 function printHelp(): void {
   console.log(`

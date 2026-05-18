@@ -186,7 +186,7 @@ You pay your provider directly. Run `prof history` to track spend.
 
 ## Status
 
-`v0.0.1-alpha.3`. Pre-PMF. Built in one night by Claude Code + Codex on a [pi-agent-core](https://github.com/earendil-works/pi) substrate. Expect rough edges. File issues with love.
+`v0.0.1-alpha.5`. Pre-PMF. Built in one night by Claude Code + Codex on a [pi-agent-core](https://github.com/earendil-works/pi) substrate. Expect rough edges. File issues with love.
 
 ### What's missing (v0.0.2 backlog)
 

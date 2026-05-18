@@ -80,7 +80,7 @@ export function printWelcome(): void {
 
   console.log();
   console.log(c.primary("╭" + HR + "╮"));
-  console.log(box(c.bold("prof") + c.dim("  v0.0.1-alpha.4  ") + c.italic("research is a journey")));
+  console.log(box(c.bold("prof") + c.dim("  v0.0.1-alpha.5  ") + c.italic("research is a journey")));
   if (onboarded) {
     const stats: string[] = [];
     if (profile?.name) stats.push(c.bold(profile.name));

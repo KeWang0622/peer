@@ -15,6 +15,17 @@ import { printWelcome } from "./welcome.js";
 const META_COMMANDS = ["help", "clear", "reset", "exit", "quit"] as const;
 
 export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> {
+  printWelcome();
+
+  // Deterministic first-run onboarding (no library, no profile → 60-sec setup)
+  const { isFirstRun, runFirstRun, executeOutcome } = await import("./onboard-firstrun.js");
+  if (isFirstRun()) {
+    const outcome = await runFirstRun();
+    if (!outcome.skipped) {
+      await executeOutcome(outcome, !!opts.verbose);
+    }
+  }
+
   const agent = buildProfAgent({ verbose: !!opts.verbose });
   const renderer = createEventRenderer();
   let awaitingAgent = false;
@@ -58,7 +69,6 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
     rl.close();
   });
 
-  printWelcome();
   showHelpHint();
   rl.prompt();
 
@@ -226,7 +236,10 @@ function createEventRenderer(): ((event: AgentEvent) => void) & { reset: () => v
 
       case "toolcall_end":
         endInlineBlock();
-        console.log(c.dim("requested ") + c.accent(event.toolCall.name) + c.dim(formatArgs(event.toolCall.arguments)));
+        // Pretty: just show "▸ tool_name" with a short hint, not the full JSON
+        process.stdout.write(c.dim("  ▸ ") + c.accent(event.toolCall.name));
+        process.stdout.write(c.dim(briefArgs(event.toolCall.arguments)));
+        process.stdout.write("\n");
         break;
 
       case "error":
@@ -243,8 +256,13 @@ function createEventRenderer(): ((event: AgentEvent) => void) & { reset: () => v
     const text = resultText(result);
     if (!text) return;
     endInlineBlock();
-    const label = isError ? c.bad("tool error") : c.dim("result");
-    console.log(label + c.dim(": ") + truncate(text, 4_000));
+    if (isError) {
+      console.log(c.bad("  ✗ tool error: ") + truncate(text, 200));
+    } else {
+      // Don't dump full tool output — the LLM will summarize it in its next turn.
+      // Just show a short confirmation.
+      console.log(c.ok("  ✓") + c.dim(` (${text.length} chars)`));
+    }
   }
 
   function endInlineBlock(): void {
@@ -275,6 +293,23 @@ function formatArgs(args: unknown): string {
   } catch {
     return "";
   }
+}
+
+/** A compact, human-friendly hint of what the tool is being called with. */
+function briefArgs(args: unknown): string {
+  if (!args || typeof args !== "object") return "";
+  const obj = args as Record<string, unknown>;
+  const parts: string[] = [];
+  for (const k of Object.keys(obj).slice(0, 2)) {
+    const v = obj[k];
+    if (typeof v === "string" && v.length > 0) {
+      const short = v.length > 40 ? v.slice(0, 37) + "…" : v;
+      parts.push(`${k}="${short}"`);
+    } else if (typeof v === "number" || typeof v === "boolean") {
+      parts.push(`${k}=${v}`);
+    }
+  }
+  return parts.length ? `  ${parts.join(" ")}` : "";
 }
 
 function truncate(text: string, max: number): string {
