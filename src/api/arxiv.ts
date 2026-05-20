@@ -84,7 +84,7 @@ export async function searchArxiv(
   const url = `${BASE}?${params.toString()}`;
   return paced(async () => {
     const resp = await fetchWithRetry(url, {
-      headers: { "User-Agent": "prof/0.0.1 (https://github.com/kewang/prof)" },
+      headers: { "User-Agent": "peer/0.0.1 (https://github.com/KeWang0622/peer)" },
     });
     if (!resp.ok) {
       throw new Error(`arXiv search failed ${resp.status}: ${await resp.text()}`);
@@ -101,7 +101,7 @@ export async function getArxivById(arxivId: string): Promise<ArxivEntry | undefi
   });
   return paced(async () => {
     const resp = await fetchWithRetry(`${BASE}?${params.toString()}`, {
-      headers: { "User-Agent": "prof/0.0.1 (https://github.com/kewang/prof)" },
+      headers: { "User-Agent": "peer/0.0.1 (https://github.com/KeWang0622/peer)" },
     });
     if (!resp.ok) {
       throw new Error(`arXiv getById(${cleaned}) failed ${resp.status}: ${await resp.text()}`);

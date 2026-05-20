@@ -37,5 +37,5 @@ jobs:
 
       - name: Smoke: prof --help and --version
         run: |
-          node dist/bin/prof.js --version
-          node dist/bin/prof.js --help
+          node dist/bin/peer.js --version
+          node dist/bin/peer.js --help

@@ -22,7 +22,7 @@ import { paths } from "../src/config/paths.js";
 import { countPapers } from "../src/db/client.js";
 import { totalCostUsd } from "../src/lib/llm.js";
 
-const VERSION = "0.0.1-alpha.6";
+const VERSION = "0.0.1-alpha.9";
 const BRAND = "peer";
 
 function printHelp(): void {
@@ -81,7 +81,7 @@ ENV
 
 NOTES
   All data is local at ${paths.home()}
-  Apache 2.0, BYOK. https://github.com/kewang/prof
+  Apache 2.0, BYOK. https://github.com/KeWang0622/peer
 	`);
 }
 
@@ -467,7 +467,7 @@ async function main(): Promise<void> {
 
 main().catch((err: unknown) => {
   const e = err as Error;
-  console.error(`\nprof: ${e.message}`);
+  console.error(`\npeer: ${e.message}`);
   if (process.env.PROF_DEBUG) {
     console.error(e.stack);
   } else {

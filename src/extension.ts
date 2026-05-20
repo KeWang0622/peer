@@ -1,7 +1,7 @@
 /**
  * peer — pi-agent-core extension entry point.
  *
- * Registered when a user runs `pi install @kewang/prof`.
+ * Registered when a user runs `pi install @KeWang0622/peer`.
  * Adds:
  *   - slash command /read
  *   - slash command /map

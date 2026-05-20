@@ -35,7 +35,7 @@ The output is a 2000-word PhD-quality field overview, a tiered reading list, ide
 ## Install
 
 ```bash
-npm install -g @kewang/prof
+npm install -g @KeWang0622/peer
 ```
 
 Set your keys (BYOK):
@@ -186,7 +186,7 @@ You pay your provider directly. Run `peer history` to track spend.
 
 ## Status
 
-`v0.0.1-alpha.5`. Pre-PMF. Built in one night by Claude Code + Codex on a [pi-agent-core](https://github.com/earendil-works/pi) substrate. Expect rough edges. File issues with love.
+`v0.0.1-alpha.9`. Pre-PMF. Built in one night by Claude Code + Codex on a [pi-agent-core](https://github.com/earendil-works/pi) substrate. Expect rough edges. File issues with love.
 
 ### What's missing (v0.0.2 backlog)
 

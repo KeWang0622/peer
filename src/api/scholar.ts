@@ -113,7 +113,7 @@ export async function fetchScholarProfile(input: string): Promise<ScholarProfile
       {
         headers: {
           "User-Agent":
-            "Mozilla/5.0 (X11; Linux x86_64) prof/0.0.1 (+https://github.com/kewang/prof)",
+            "Mozilla/5.0 (X11; Linux x86_64) peer/0.0.1 (+https://github.com/KeWang0622/peer)",
           Accept: "text/html,application/xhtml+xml",
         },
       },

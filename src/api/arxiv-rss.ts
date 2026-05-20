@@ -7,7 +7,7 @@
 import { fetchWithRetry } from "../lib/retry.js";
 
 const BASE = "https://rss.arxiv.org/rss";
-const USER_AGENT = "prof/0.0.1 (https://github.com/kewang/prof)";
+const USER_AGENT = "peer/0.0.1 (https://github.com/KeWang0622/peer)";
 
 export interface ArxivRssEntry {
   id: string;

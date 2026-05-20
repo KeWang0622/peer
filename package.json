@@ -1,6 +1,6 @@
 {
   "name": "@kewang/peer",
-  "version": "0.0.1-alpha.6",
+  "version": "0.0.1-alpha.9",
   "description": "peer — your terminal-native research peer. Onboard a field in 10 minutes. (Previously: prof, lit.)",
   "keywords": [
     "research",
@@ -17,11 +17,11 @@
   "author": "Ke Wang <ke@pika.art>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kewang/prof.git"
+    "url": "git+https://github.com/KeWang0622/peer.git"
   },
-  "homepage": "https://github.com/kewang/prof#readme",
+  "homepage": "https://github.com/KeWang0622/peer#readme",
   "bugs": {
-    "url": "https://github.com/kewang/prof/issues"
+    "url": "https://github.com/KeWang0622/peer/issues"
   },
   "type": "module",
   "main": "./dist/src/extension.js",

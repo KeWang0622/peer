@@ -117,7 +117,7 @@ We add (in v0.0.1-alpha):
 
 Coming in v0.0.2+: the full 13-tool AgentTool[] set so `pi` users can call research operations directly inside the agent loop.
 
-`prof` can be installed standalone (`npm install -g @kewang/prof`) or as a pi extension (`pi install @kewang/prof`). The same code powers both.
+`peer` can be installed standalone (`npm install -g @KeWang0622/peer`) or as a pi extension (`pi install @KeWang0622/peer`). The same code powers both.
 
 ## Not in v0.0.1
 

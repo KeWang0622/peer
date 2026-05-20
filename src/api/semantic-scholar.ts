@@ -38,7 +38,7 @@ const REFS_CITES_FIELDS = [
 
 function headers(): Record<string, string> {
   const h: Record<string, string> = {
-    "User-Agent": "prof/0.0.1 (https://github.com/kewang/prof)",
+    "User-Agent": "peer/0.0.1 (https://github.com/KeWang0622/peer)",
     "Accept": "application/json",
   };
   const key = process.env.SEMANTIC_SCHOLAR_API_KEY;

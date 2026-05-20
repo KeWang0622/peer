@@ -2,7 +2,7 @@
  * Natural-language REPL for `peer shell`.
  *
  * This shell is a real pi-agent-core Agent: user text goes straight to the
- * model, which decides when to call prof's research tools.
+ * model, which decides when to call peer's research tools.
  */
 import * as readline from "node:readline";
 import type { AgentEvent, AgentToolResult } from "@earendil-works/pi-agent-core";
@@ -112,7 +112,7 @@ function handleMetaCommand(line: string, rl: readline.Interface, agent: ReturnTy
     return true;
   }
   if (cmd === "reset") {
-    // Reset only the pi-agent conversation; prof's persisted library stays intact.
+    // Reset only the pi-agent conversation; peer's persisted library stays intact.
     agent.reset();
     console.log(c.dim("session reset"));
     rl.prompt();
@@ -235,7 +235,7 @@ function createEventRenderer(): ((event: AgentEvent) => void) & { reset: () => v
 
       case "text_delta":
         if (!printedAssistantText) {
-          process.stdout.write(c.bold("prof: "));
+          process.stdout.write(c.bold("peer: "));
           printedAssistantText = true;
         }
         process.stdout.write(event.delta);
