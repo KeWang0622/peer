@@ -69,7 +69,7 @@ async function askRole(rl: readline.Interface): Promise<Role> {
 export async function runFirstRun(): Promise<OnboardOutcome> {
   console.log();
   console.log(c.primary("─".repeat(70)));
-  console.log("  " + c.bold("welcome to lit") + c.dim(" — 60-second setup"));
+  console.log("  " + c.bold("welcome to peer") + c.dim(" — your research peer · 60-second setup"));
   console.log();
   console.log("  " + c.dim("type 'skip' at any step to jump into the shell unguided"));
   console.log(c.primary("─".repeat(70)));
@@ -147,7 +147,7 @@ onboarded_at: ${now}
 Role: ${role}
 Primary subfield: ${area ?? "(not specified)"}
 
-This file is editable. \`lit\` reads it on every startup. Change \`role:\` to
+This file is editable. \`peer\` reads it on every startup. Change \`role:\` to
 recalibrate the assistant (phd_student | postdoc | faculty | industry | independent).
 `;
   fs.writeFileSync(paths.profile(), md);

@@ -23,11 +23,11 @@ import { countPapers } from "../src/db/client.js";
 import { totalCostUsd } from "../src/lib/llm.js";
 
 const VERSION = "0.0.1-alpha.6";
-const BRAND = "lit";
+const BRAND = "peer";
 
 function printHelp(): void {
   console.log(`
-${BRAND} v${VERSION}  ·  research is a journey  (legacy alias: prof)
+${BRAND} v${VERSION}  ·  your research peer  (legacy aliases: lit, prof)
 
 USAGE
   prof                          print welcome + start-here links

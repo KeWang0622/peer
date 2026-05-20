@@ -1,7 +1,7 @@
 {
   "name": "@kewang/prof",
   "version": "0.0.1-alpha.6",
-  "description": "lit — your terminal-native research companion. Onboard a field in 10 minutes. (Previously: prof.)",
+  "description": "peer — your terminal-native research peer. Onboard a field in 10 minutes. (Previously: prof, lit.)",
   "keywords": [
     "research",
     "academic",
@@ -27,6 +27,7 @@
   "main": "./dist/src/extension.js",
   "types": "./dist/src/extension.d.ts",
   "bin": {
+    "peer": "./dist/bin/prof.js",
     "lit": "./dist/bin/prof.js",
     "prof": "./dist/bin/prof.js"
   },
