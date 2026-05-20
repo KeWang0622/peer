@@ -1,26 +1,44 @@
+<div align="center">
+
+<img src="docs/images/hero.jpg" alt="peer — a research agent that lives in your terminal" width="100%"/>
+
 # peer
 
-> **research is a journey.**
-> *peer* is your terminal-native research peer — from the first day you have no idea what to work on, to your defense.
+### a **research agent** that lives in your terminal
+
+*Not a coding agent. Not a chatbot. An autonomous agent for the research journey — from "I have no idea what to work on" to your thesis defense.*
 
 ![status](https://img.shields.io/badge/status-alpha-orange)
 ![node](https://img.shields.io/badge/node-22%2B-green)
 ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![commands](https://img.shields.io/badge/commands-17-blue)
+![agent](https://img.shields.io/badge/type-AI%20agent-purple)
+![pi-agent-core](https://img.shields.io/badge/built%20on-pi--agent--core-black)
 
-Not your professor. Your peer. **You're a researcher, I'm a researcher** — same level, different toolset (infinite memory + access to every paper).
+**Local-first · BYOK · Apache 2.0**
 
-**For**: PhD students, postdocs, faculty, industry researchers, curious learners — *peer* calibrates to your role.
-
-**Built on** [`pi-agent-core`](https://github.com/earendil-works/pi). **Local-first. BYOK. Apache 2.0.**
+</div>
 
 ---
 
-## The 90-second demo
+## What is peer?
 
-```
+> *you're a researcher, I'm a researcher* — same level, different toolset.
+
+**peer is an AI research agent.** It plans, picks tools, runs them, reads results, decides what's next, persists what it learns, and continues across sessions. It's not a wrapper around a chat box — it's a real agent loop built on [`pi-agent-core`](https://github.com/earendil-works/pi) with 17 research tools registered.
+
+You talk to it like you'd talk to a smart labmate. It uses tools like you'd use a browser tab — except the browser tab remembers every paper you've ever read, can map an entire field in 38 seconds, and finds gaps in the literature while you sleep.
+
+**peer calibrates to your role**: PhD student, postdoc, faculty, industry researcher, or independent learner. The agent adapts its language and recommendations to where you actually are.
+
+---
+
+## See it think
+
+```text
 $ peer shell
-welcome to peer — your research peer · 60-second setup
+welcome to peer — your research agent · 60-second setup
+
 What should I call you?  ▸ Ke
 What's your role?
   1. PhD student     2. Postdoc     3. Faculty
@@ -29,42 +47,58 @@ What's your role?
 What's your research area?  ▸ diffusion alignment
 
 (then, naturally:)
+
 you ❯ what should I read first?
-peer: For diffusion alignment, start with the DPO paper (arxiv:2305.18290).
-      It introduces preference learning without explicit RL. Then build from there.
-      Want me to map the field and pull a reading list?
+
+peer ✦ thinking…
+peer ✦ For diffusion alignment, start with the DPO paper (arxiv:2305.18290).
+        It introduces preference learning without explicit RL. Solid foundation.
+        Want me to map the field and pull a tiered reading list?
+
 you ❯ yes
-peer: ▸ map_field topic="diffusion alignment"
-      ⠋ map_field (38s)
-      ✓ mapped 41 papers · 3 subfields  → ~/.peer/notes/fields/diffusion-alignment/
-peer: 41 papers, 3 subfields, $0.05. Top 5 to read first:
-        1. DPO (arxiv:2305.18290) — foundational
-        2. RLHF (arxiv:2203.02155)
-        3. Constitutional AI (arxiv:2212.08073)
-        4. ...
-      Reading trail saved. `peer next` continues where you left off.
+
+peer ✦ ▸ map_field topic="diffusion alignment"
+        ⠋ searching Semantic Scholar     · 12s
+        ⠋ clustering 41 papers           · 22s
+        ⠋ writing field overview         · 38s
+        ✓ 41 papers · 3 subfields · $0.05  → ~/.peer/notes/fields/diffusion-alignment/
+
+peer ✦ Done. Top 5 to read in order:
+          1. DPO (arxiv:2305.18290)               — foundational
+          2. RLHF (arxiv:2203.02155)              — methodology root
+          3. Constitutional AI (arxiv:2212.08073) — alignment branch
+          4. ...
+
+        Reading trail saved. `peer next` continues from here.
+        Want me to deep-read DPO into your library now?
 ```
 
-That's the whole journey: onboard → talk → tools-on-rails → compounding library. Try it. Five minutes.
+That's the **whole agent loop**: a tool call, a real result, a follow-up suggestion, and state that compounds. Try it. Five minutes.
 
-```
-$ peer map "mechanistic interpretability"
+---
 
-Mapping field: "mechanistic interpretability"
-  · searching: Semantic Scholar
-  · seeded: 41 papers found
-  · clustering: into 3 subfields
-  · writing: Generating field overview narrative
+## Why this is an agent (and not "another AI tool")
 
-✓ Mapped in 38s. Cost: $0.05
+Most "research AI" products are pretty UIs over a single LLM call. peer is built differently:
 
-  41 papers · 3 subfields
-  → ~/.peer/notes/fields/mechanistic-interpretability/
+| | peer (agent) | Most research AI tools |
+|---|---|---|
+| Planning | ✓ multi-step task plans | ✗ single-shot prompt |
+| Tool use | ✓ 17 tools, agent chooses | ✗ fixed prompts |
+| Memory | ✓ 4-layer knowledge graph that compounds across years | ✗ session-only |
+| Autonomy | ✓ runs to completion, asks for confirmation only at branch points | ✗ ask → answer → forget |
+| Citations | ✓ cross-checked against your local graph | ✗ often hallucinated |
+| Where it runs | ✓ in YOUR terminal, with YOUR keys, on YOUR files | ✗ their cloud |
 
-Try: cat ~/.peer/notes/fields/mechanistic-interpretability/overview.md
-```
+peer is built on [`pi-agent-core`](https://github.com/earendil-works/pi) — a minimal extensible agent runtime. The same substrate used for coding agents, except here every tool is research-shaped: `map_field`, `find_gap`, `cite_check`, `read_paper`, `collab_search`, …
 
-The output is a 2000-word PhD-quality field overview, a tiered reading list, identified subfields, and open problems. **In 38 seconds, for $0.05.**
+---
+
+<div align="center">
+<img src="docs/images/graph.jpg" alt="peer's compounding knowledge graph" width="100%"/>
+
+*Your library, growing with every paper. peer reads it before answering.*
+</div>
 
 ---
 
@@ -74,13 +108,12 @@ The output is a 2000-word PhD-quality field overview, a tiered reading list, ide
 npm install -g @kewang/peer
 ```
 
-Set your keys (BYOK):
+Set your keys (BYOK — your library, your money, your data):
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...    # required: the brain
-export OPENAI_API_KEY=sk-...           # required: embeddings for map/ask
-# optional, higher S2 rate limits:
-export SEMANTIC_SCHOLAR_API_KEY=...
+export OPENAI_API_KEY=sk-...           # required: embeddings
+export SEMANTIC_SCHOLAR_API_KEY=...    # optional: higher S2 rate limits
 ```
 
 Verify:
@@ -97,52 +130,52 @@ peer onboard
 
 ---
 
-## The 17 commands, by stage of your research journey
+## The 17 agent tools, by stage of your research journey
 
 ### orient — where am I?
 
-| Command | Use when |
+| Command | The agent does this for you |
 |---|---|
-| `peer onboard` | Day 1. Tell peer your Google Scholar URL or paste 5 arxiv IDs. It seeds your library. |
-| `peer map "<topic>"` | Walking into a new area cold. Get a PhD-quality field map in 5 minutes. |
+| `peer onboard` | Day 1. Tell peer your Google Scholar URL or 5 arxiv IDs. Seeds your library. |
+| `peer map "<topic>"` | Walking into a new field cold. **38s · ~$0.05** for a PhD-quality map. |
 | `peer daily` | Morning ritual. Today's top arxiv papers, ranked by what's in your library. |
 
 ### think — what should I work on?
 
-| Command | Use when |
+| Command | The agent does this for you |
 |---|---|
-| `peer brainstorm "<vague idea>"` | You have a half-formed thought. Expand into 3 framings + 5 adjacent angles. |
-| `peer gap "<X> and <Y>"` | Looking for a thesis topic. Find sparse intersections + concrete questions. |
-| `peer next "<goal>"` | "What should I read next toward X?" Picks one paper + alternates. Persists as a trail — re-run to continue. |
+| `peer brainstorm "<vague idea>"` | Half-formed thought → 3 framings + 5 adjacent angles. |
+| `peer gap "<X> and <Y>"` | Looking for a thesis. Finds sparse intersections + concrete questions. |
+| `peer next "<goal>"` | "What should I read next toward X?" Picks one + alternates. Persists as a trail. |
 
 ### read — going deep
 
-| Command | Use when |
+| Command | The agent does this for you |
 |---|---|
-| `peer read <arxiv-id>` | A paper matters. Deep-read into a structured Obsidian-compatible note + L1+L2 graph. |
-| `peer ask "<question>"` | "What did I actually believe about X?" — cited Q&A over your library. |
-| `peer compare <id1> <id2>` | Two papers in your tabs. Side-by-side: shared assumptions, real differences, when to use which. |
+| `peer read <arxiv-id>` | A paper matters. Deep-read → structured Obsidian note + graph edges. |
+| `peer ask "<question>"` | "What did I actually believe about X?" Cited Q&A across your library. |
+| `peer compare <id1> <id2>` | Two papers in your tabs. Side-by-side: shared assumptions, real differences. |
 
 ### publish — putting words on paper
 
-| Command | Use when |
+| Command | The agent does this for you |
 |---|---|
-| `peer cite "<claim>"` | Writing the intro, need 3 citations to back this sentence. Returns BibTeX + `\cite{...}`. |
-| `peer relwork "<topic>"` | Drafting Related Work. Clusters your library + recent literature into thematic groups. |
-| `peer outline "<topic>"` | Sketching a paper. Title, abstract, 7 sections with bullet points, citations needed. |
+| `peer cite "<claim>"` | Writing the intro, need 3 citations. Returns BibTeX + `\cite{...}`. |
+| `peer relwork "<topic>"` | Drafting Related Work. Thematic groups, not a bullet dump. |
+| `peer outline "<topic>"` | Sketching a paper. Title, abstract, 7 sections, citations needed. |
 
 ### share — finding your people
 
-| Command | Use when |
+| Command | The agent does this for you |
 |---|---|
-| `peer collab "<topic\|author>"` | Looking for collaborators or labs. Active researchers ranked by recent papers. |
+| `peer collab "<topic\|author>"` | Looking for collaborators or labs. Active researchers ranked by recency. |
 | `peer graph` | Show me my journey. D3 force-directed knowledge graph in the browser. |
 
 ### reflect — the journey log
 
-| Command | Use when |
+| Command | The agent does this for you |
 |---|---|
-| `peer journal` | Friday evening, what did I learn this week. Markdown diary in `~/.peer/notes/journal.md`. |
+| `peer journal` | Friday evening, what did I learn this week. Markdown diary. |
 | `peer history` | Where have I been? Recent reads + library size + spend. |
 | `peer doctor` | Things feel slow. Preflight: keys, node, sqlite, network. |
 
@@ -168,7 +201,7 @@ Everything is local. One folder. Open it in [Obsidian](https://obsidian.md) and 
 ```
 ~/.peer/
 ├── peer.db                      # SQLite knowledge graph (L1+L2)
-├── profile.md                   # who you are (from onboard)
+├── profile.md                   # who you are (role-aware persona)
 ├── notes/
 │   ├── papers/                  # one Obsidian-compat .md per paper
 │   ├── fields/                  # output of peer map
@@ -177,29 +210,55 @@ Everything is local. One folder. Open it in [Obsidian](https://obsidian.md) and 
 │   └── graph.html               # interactive D3 graph
 ```
 
-Wikilinks `[[like this]]` between papers and concepts.
+Wikilinks `[[like this]]` between papers and concepts. Your graph grows for years.
 
 ---
 
-## Why peer is different
+## How the agent actually works
 
-This is not Claude Code with a research preset. The schema is the product:
+```
+        ┌────────────────────────────────────────────────────────┐
+        │                     peer (agent)                       │
+        │                                                        │
+        │   ┌──────────────────────────────────────────────┐    │
+        │   │  Anthropic Claude — planner + tool selector  │    │
+        │   └──────────────────────────────────────────────┘    │
+        │                       │                                │
+        │   ┌───────────────────┴───────────────────────────┐   │
+        │   │            17 research tools                   │   │
+        │   │  map_field  find_gap  read_paper  cite_check   │   │
+        │   │  ask_library  brainstorm  compare  outline …   │   │
+        │   └───────────────────┬───────────────────────────┘   │
+        │                       │                                │
+        │   ┌───────────────────┴───────────────────────────┐   │
+        │   │  4-layer knowledge graph (SQLite + embeddings) │   │
+        │   │  L1 citations · L2 semantic · L3 your notes ·  │   │
+        │   │  L4 action history                             │   │
+        │   └───────────────────────────────────────────────┘   │
+        │                                                        │
+        └────────────────────────────────────────────────────────┘
+                            ↑
+                  built on pi-agent-core
+                  (minimal extensible runtime)
+```
 
-- **4-layer knowledge graph that compounds over years**, not single-session memory
-- **Onboarding learns YOUR field** from YOUR publications, not anonymous topics
-- **Citations are cross-checked against the local graph** before output — no hallucinations
-- **Local-first, BYOK** — your library, your money, your data
-- **Terminal-native** — not a web app
+The agent owns the loop. You own the data. The graph compounds.
+
+---
+
+## Why peer vs other "research AI" products
 
 | | peer | Elicit | ResearchRabbit | Notion AI | Claude Code |
 |---|---|---|---|---|---|
-| Compounding library | ✓ | partial | partial | – | – |
+| **It's an agent** (plan + tools + memory) | ✓ | partial | – | – | ✓ (coding) |
+| Compounding library across years | ✓ | partial | partial | – | – |
 | Cited Q&A | ✓ | ✓ | – | partial | partial |
 | Field maps with narrative | ✓ | – | – | – | – |
-| Local, BYOK | ✓ | – | – | – | partial |
-| Terminal | ✓ | – | – | – | ✓ |
+| Gap-finding | ✓ | – | – | – | – |
+| Local-first + BYOK | ✓ | – | – | – | partial |
+| Terminal-native | ✓ | – | – | – | ✓ |
 | Knowledge graph viz | ✓ | – | partial | – | – |
-| Drafting + BibTeX | ✓ | partial | – | – | partial |
+| BibTeX + drafting | ✓ | partial | – | – | partial |
 
 ---
 
@@ -226,19 +285,27 @@ You pay your provider directly. Run `peer history` to track spend.
 
 ### What's missing (v0.0.2 backlog)
 
-- Full-PDF parsing (`peer read --full` flag) — currently we only read abstracts
+- Full-PDF parsing (`peer read --full`) — currently abstracts only
 - Persistent embedding cache (sqlite-vec) — currently re-embeds every call
 - Tests for the newer commands (cite, gap, compare, outline, relwork, brainstorm, collab)
 - Full `AgentTool[]` registration when used as a pi extension
 - Zotero / BibTeX library import
-- Interactive REPL shell (`peer shell`)
-- Voice mode via OpenAI Realtime
 
 ### Roadmap
 
-- **v0.0.2** — the polish & integrity release: PDF parse, embed cache, full pi extension, tests
+- **v0.0.2** — polish & integrity: PDF parse, embed cache, full pi extension, tests
 - **v0.1** — collaboration: `peer watch`, `peer export`, Zotero sync, `peer rebuttal`
-- **v1.0** — the OS: shell mode, voice mode, web companion, multi-language papers
+- **v1.0** — the OS: shell mode (✓), voice mode, web companion, multi-language papers
+
+---
+
+## Contributing
+
+This repo is being shipped in public. PRs welcome — especially:
+- Researchers across disciplines wanting role-specific persona tweaks
+- New tools (`peer ____` ideas)
+- Zotero / BibTeX importers
+- LaTeX exporters
 
 ---
 
@@ -248,4 +315,9 @@ Apache 2.0 © Ke Wang. Free, forever.
 
 ---
 
-> Research is a journey. May yours be a good one.
+<div align="center">
+
+**Research is a journey.**
+*May yours be a good one.*
+
+</div>
