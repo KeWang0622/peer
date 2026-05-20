@@ -104,19 +104,25 @@ peer is built on [`pi-agent-core`](https://github.com/earendil-works/pi) — a m
 
 ## Install
 
+`peer` ships from source while it's pre-1.0. Two steps:
+
 ```bash
-npm install -g @kewang/peer
+git clone https://github.com/KeWang0622/peer.git
+cd peer
+npm install
+npm run build
+npm link              # makes `peer` available globally
 ```
 
 Set your keys (BYOK — your library, your money, your data):
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...    # required: the brain
-export OPENAI_API_KEY=sk-...           # required: embeddings
+export ANTHROPIC_API_KEY=sk-ant-...    # required: the agent's brain
+export OPENAI_API_KEY=sk-...           # required: embeddings for ask/map
 export SEMANTIC_SCHOLAR_API_KEY=...    # optional: higher S2 rate limits
 ```
 
-Verify:
+Verify everything is healthy:
 
 ```bash
 peer doctor
@@ -127,6 +133,8 @@ Then go on the journey:
 ```bash
 peer onboard
 ```
+
+> npm publish coming soon under `@kewang/peer`. Watch the repo for the release tag.
 
 ---
 
@@ -246,23 +254,43 @@ The agent owns the loop. You own the data. The graph compounds.
 
 ---
 
-## Why peer vs other "research AI" products
+## How peer fits next to the tools you already know
 
-| | peer | Elicit | ResearchRabbit | Notion AI | Claude Code |
-|---|---|---|---|---|---|
-| **It's an agent** (plan + tools + memory) | ✓ | partial | – | – | ✓ (coding) |
-| Compounding library across years | ✓ | partial | partial | – | – |
-| Cited Q&A | ✓ | ✓ | – | partial | partial |
-| Field maps with narrative | ✓ | – | – | – | – |
-| Gap-finding | ✓ | – | – | – | – |
-| Local-first + BYOK | ✓ | – | – | – | partial |
-| Terminal-native | ✓ | – | – | – | ✓ |
-| Knowledge graph viz | ✓ | – | partial | – | – |
-| BibTeX + drafting | ✓ | partial | – | – | partial |
+This is the honest version. Other tools are good at what they do — peer just sits in a different spot.
+
+| | **peer** | Elicit | ResearchRabbit | Claude Code |
+|---|---|---|---|---|
+| Primary surface | terminal | web | web | terminal |
+| Cited Q&A over your own library | ✓ | ✓ | – | partial |
+| Visual citation/co-citation graphs | ✓ (D3, local) | – | ✓ (great) | – |
+| Field maps with narrative + tiered reading list | ✓ | partial | – | – |
+| Gap-finding across topic pairs | ✓ | – | – | – |
+| Compounding knowledge graph across years | ✓ (SQLite, local) | partial | partial | – |
+| Local-first, files in plain Markdown | ✓ | – | – | ✓ |
+| BYOK (your keys, your spend) | ✓ | – | – | ✓ |
+| Built as an agent (plan → tools → memory) | ✓ (research) | – | – | ✓ (coding) |
+| BibTeX + drafting helpers | ✓ | partial | – | partial |
+
+The closest sibling is Claude Code — *peer is what that idea looks like when the tools are research tools instead of coding tools.*
 
 ---
 
-## Cost model (real numbers, May 2026)
+## Day 1 → Day 30: what your week with peer looks like
+
+| When | What you run | What you get |
+|---|---|---|
+| **Day 1** | `peer onboard` then `peer map "<your area>"` | Profile + 40-paper field overview + tiered reading list |
+| **Day 2-7** | `peer daily` every morning · `peer read <id>` for hits | Personalized arxiv feed + 5-10 deeply-read papers in your graph |
+| **Day 7** | `peer ask "what do I actually know about X?"` | Cited Q&A grounded in YOUR library — a real epistemic mirror |
+| **Day 14** | `peer gap "<X> and <Y>"` · `peer brainstorm "<idea>"` | Sparse intersections + 3 framings for your next direction |
+| **Day 21** | `peer outline "<topic>"` · `peer cite "<claim>"` | Paper outline with citations needed + BibTeX |
+| **Day 30** | `peer graph` · `peer history` · `peer journal` | A D3 graph of the field you've internalized + spend log + diary |
+
+You don't have to follow this. The agent just shows up where you are.
+
+---
+
+## Cost model (real numbers — run `peer history` for your live spend)
 
 | Operation | Approx cost |
 |---|---|
@@ -281,19 +309,23 @@ You pay your provider directly. Run `peer history` to track spend.
 
 ## Status
 
-`v0.0.1-alpha.9`. Pre-PMF. Built in one night by Claude Code + Codex on a [pi-agent-core](https://github.com/earendil-works/pi) substrate. Expect rough edges. File issues with love.
+`v0.0.1-alpha.10` · pre-PMF · iterating in public on the [pi-agent-core](https://github.com/earendil-works/pi) substrate. Expect rough edges and breaking changes between alpha tags. File issues — they're how the agent learns who's using it.
+
+### Safety model
+
+The agent runs **sandboxed**: read/write/edit/grep/find/ls only, and all file paths are jailed to your peer home directory (`~/.peer/` by default, or `$PEER_HOME`). It has **no shell/bash tool**. The agent cannot reach your `~/.ssh/`, your dotfiles, or anything outside its own folder.
 
 ### What's missing (v0.0.2 backlog)
 
 - Full-PDF parsing (`peer read --full`) — currently abstracts only
 - Persistent embedding cache (sqlite-vec) — currently re-embeds every call
 - Tests for the newer commands (cite, gap, compare, outline, relwork, brainstorm, collab)
-- Full `AgentTool[]` registration when used as a pi extension
 - Zotero / BibTeX library import
+- npm-published binary (`npm install -g @kewang/peer`)
 
 ### Roadmap
 
-- **v0.0.2** — polish & integrity: PDF parse, embed cache, full pi extension, tests
+- **v0.0.2** — polish & integrity: PDF parse, embed cache, npm publish, more tests
 - **v0.1** — collaboration: `peer watch`, `peer export`, Zotero sync, `peer rebuttal`
 - **v1.0** — the OS: shell mode (✓), voice mode, web companion, multi-language papers
 

@@ -86,17 +86,22 @@ export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> 
     awaitingAgent = true;
     rl.pause();
     renderer.reset();
-    void agent.prompt(line).catch((err: unknown) => {
-      if (exiting) return;
-      const e = err as Error;
-      console.log();
-      console.log(c.bad(`error: ${e.message}`));
-      if (awaitingAgent) {
-        awaitingAgent = false;
-        rl.resume();
-        rl.prompt();
+    void (async () => {
+      try {
+        await agent.prompt(line);
+      } catch (err: unknown) {
+        if (exiting) return;
+        const msg = err instanceof Error ? err.message : String(err);
+        console.log();
+        console.log(c.bad(`error: ${msg}`));
+      } finally {
+        if (!exiting && awaitingAgent) {
+          awaitingAgent = false;
+          rl.resume();
+          rl.prompt();
+        }
       }
-    });
+    })();
   });
 }
 

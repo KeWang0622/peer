@@ -1,13 +1,14 @@
 import * as fs from "node:fs";
 import { Agent } from "@earendil-works/pi-agent-core";
 import { getModel } from "@earendil-works/pi-ai";
-import { createCodingTools } from "@earendil-works/pi-coding-agent";
 import { buildProfTools } from "./tools.js";
+import { createSandboxedTools } from "./sandbox.js";
 import { countPapers } from "../db/client.js";
 import { paths } from "../config/paths.js";
 import { findRole, DEFAULT_ROLE, type Role } from "./roles.js";
+import { MODELS } from "../lib/llm.js";
 
-const SYSTEM_PROMPT_BASE = `You are peer — a terminal-native research peer. Slogan: research is a journey.
+const SYSTEM_PROMPT_BASE = `You are peer — a terminal-native research agent. Slogan: research is a journey.
 
 You serve the user as their peer, not their professor. Egalitarian tone:
 they're a researcher, you're a researcher (with infinite memory + tool access).
@@ -16,18 +17,19 @@ You serve ONE researcher. Their role is configured in their profile; calibrate a
 
 You have two kinds of tools:
 
-A) RESEARCH TOOLS (peer's domain):
+A) RESEARCH TOOLS (peer's domain — prefer these):
    read_paper, map_field, ask_library, find_citations, find_gap,
    next_paper, daily_picks, brainstorm_idea, library_status, list_library
 
-B) FILE/SHELL TOOLS (general purpose):
-   read, write, edit, bash, grep, find, ls
-   Use these for: saving HTML/LaTeX/markdown files, running scripts,
-   organizing their library, opening files, etc.
+B) SANDBOXED FILE TOOLS (restricted to the user's peer home directory):
+   read, write, edit, grep, find, ls
+   Use these to save/read notes, fields, summaries, exports.
+   All file paths are jailed to the peer home — you CANNOT read or write outside it.
+   You do NOT have a bash/shell tool.
 
-Working directory is ~/.peer (legacy path; the binary is now \`peer\`).
-Library: ~/.peer/peer.db. Notes: ~/.peer/notes/. Save user-requested
-files there by default unless they specify another path.
+The peer home directory is your ONLY working area. Library: peer.db.
+Notes go under notes/. Save user-requested files there by default
+unless they specify a relative path within the home.
 
 Behaviors:
 - Be terse. Researchers are busy.
@@ -35,7 +37,7 @@ Behaviors:
 - For brand-new users (empty library), guide an onboarding conversation.
 - Substantive question + library has papers → call ask_library.
 - "What should I read next?" → call next_paper.
-- "Save this as a file" → use write tool. Don't lecture about your limitations — you HAVE the tools.
+- "Save this as a file" → use write tool with a path inside the home.
 - Honor reading trails — use next_paper to continue them.
 - Cite papers with (arxiv:ID) when you mention them.
 - Style: plain English, no emoji, no headings unless asked, prefer 3-7 line answers.`;
@@ -68,6 +70,7 @@ function buildSystemPrompt(): string {
   const profile = readProfile();
   const role = findRole(profile.role) ?? findRole(DEFAULT_ROLE)!;
   const lib = countPapers();
+  const home = paths.home();
 
   return [
     SYSTEM_PROMPT_BASE,
@@ -80,20 +83,20 @@ function buildSystemPrompt(): string {
     `- role: ${profile.role}`,
     `- primary subfield: ${profile.primarySubfield ?? "(not yet set)"}`,
     `- library: ${lib} paper${lib === 1 ? "" : "s"}`,
-    `- working dir: ${paths.home()}`,
-    `- if user wants to save a file with no path, default to ${paths.home()}/notes/<slug>.md`,
+    `- peer home (sandbox root): ${home}`,
+    `- save files without an explicit path to: ${home}/notes/<slug>.md`,
   ].join("\n");
 }
 
-export function createProfAgent(opts: { verbose?: boolean } = {}): Agent {
-  const profTools = buildProfTools(!!opts.verbose);
-  const codingTools = createCodingTools(paths.home());
-  const tools = [...profTools, ...codingTools];
+export function createPeerAgent(opts: { verbose?: boolean } = {}): Agent {
+  const peerResearchTools = buildProfTools(!!opts.verbose);
+  const fileTools = createSandboxedTools(paths.home());
+  const tools = [...peerResearchTools, ...fileTools];
 
   return new Agent({
     initialState: {
       systemPrompt: buildSystemPrompt(),
-      model: getModel("anthropic", "claude-sonnet-4-6"),
+      model: getModel("anthropic", MODELS.smart),
       thinkingLevel: "low",
       tools,
     },
@@ -101,5 +104,6 @@ export function createProfAgent(opts: { verbose?: boolean } = {}): Agent {
   });
 }
 
-// Legacy alias
-export const buildProfAgent = createProfAgent;
+// Legacy aliases — internal callers may still use these
+export const createProfAgent = createPeerAgent;
+export const buildProfAgent = createPeerAgent;

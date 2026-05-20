@@ -22,12 +22,12 @@ import { paths } from "../src/config/paths.js";
 import { countPapers } from "../src/db/client.js";
 import { totalCostUsd } from "../src/lib/llm.js";
 
-const VERSION = "0.0.1-alpha.9";
+const VERSION = "0.0.1-alpha.10";
 const BRAND = "peer";
 
 function printHelp(): void {
   console.log(`
-${BRAND} v${VERSION}  ·  your research peer  (legacy aliases: lit, prof)
+${BRAND} v${VERSION}  ·  your research agent in the terminal
 
 USAGE
   peer                          print welcome + start-here links
@@ -358,28 +358,6 @@ async function main(): Promise<void> {
       break;
     }
 
-    case "cite": {
-      const claim = args.join(" ").trim();
-      if (!claim) {
-        console.error('Usage: peer cite "<claim>"');
-        process.exit(1);
-      }
-      const { cmdCite } = await import("../src/commands/cite.js");
-      await cmdCite(claim, { verbose });
-      break;
-    }
-
-    case "gap": {
-      const topics = args.join(" ").trim();
-      if (!topics) {
-        console.error('Usage: peer gap "<X> and <Y>"');
-        process.exit(1);
-      }
-      const { cmdGap } = await import("../src/commands/gap.js");
-      await cmdGap(topics, { verbose });
-      break;
-    }
-
     case "journal": {
       const { cmdJournal } = await import("../src/commands/journal.js");
       const read = !!flags.read;
@@ -466,12 +444,12 @@ async function main(): Promise<void> {
 }
 
 main().catch((err: unknown) => {
-  const e = err as Error;
-  console.error(`\npeer: ${e.message}`);
-  if (process.env.PROF_DEBUG) {
-    console.error(e.stack);
+  const msg = err instanceof Error ? err.message : String(err);
+  console.error(`\npeer: ${msg}`);
+  if (process.env.PEER_DEBUG ?? process.env.PROF_DEBUG) {
+    if (err instanceof Error && err.stack) console.error(err.stack);
   } else {
-    console.error("(set PROF_DEBUG=1 for stack trace)");
+    console.error("(set PEER_DEBUG=1 for stack trace)");
   }
   process.exit(1);
 });

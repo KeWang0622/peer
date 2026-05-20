@@ -63,7 +63,7 @@ function checkNodeVersion(): CheckResult {
     return warn("Node.js >=22.0.0", `${version}; recommended >=22.0.0`);
   }
 
-  return fail("Node.js >=22.0.0", `${version}; too old for prof`);
+  return fail("Node.js >=22.0.0", `${version}; too old for peer`);
 }
 
 async function checkAnthropicApiKey(): Promise<CheckResult> {

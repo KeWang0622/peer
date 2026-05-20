@@ -1,17 +1,19 @@
 {
   "name": "@kewang/peer",
-  "version": "0.0.1-alpha.9",
-  "description": "peer — your terminal-native research peer. Onboard a field in 10 minutes. (Previously: prof, lit.)",
+  "version": "0.0.1-alpha.10",
+  "description": "peer — a terminal-native research agent. Onboard a field in 10 minutes. Local-first. BYOK.",
   "keywords": [
     "research",
+    "research-agent",
+    "ai-agent",
+    "agent",
     "academic",
     "phd",
-    "agent",
     "ai",
     "literature",
     "knowledge-graph",
-    "pi-extension",
-    "tui"
+    "cli",
+    "terminal"
   ],
   "license": "Apache-2.0",
   "author": "Ke Wang <ke@pika.art>",
@@ -27,9 +29,7 @@
   "main": "./dist/src/extension.js",
   "types": "./dist/src/extension.d.ts",
   "bin": {
-    "peer": "./dist/bin/peer.js",
-    "lit": "./dist/bin/peer.js",
-    "prof": "./dist/bin/peer.js"
+    "peer": "./dist/bin/peer.js"
   },
   "files": [
     "dist",
