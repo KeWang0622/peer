@@ -1,15 +1,51 @@
-# prof
+# peer
 
-> Research is a journey.
->
-> `prof` is your terminal companion for it — from the first day you don't know what to research, to your defense.
+> **research is a journey.**
+> *peer* is your terminal-native research peer — from the first day you have no idea what to work on, to your defense.
 
 ![status](https://img.shields.io/badge/status-alpha-orange)
 ![node](https://img.shields.io/badge/node-22%2B-green)
 ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![commands](https://img.shields.io/badge/commands-17-blue)
 
-Built on [`pi-agent-core`](https://github.com/earendil-works/pi). Local-first. BYOK. Apache 2.0.
+Not your professor. Your peer. **You're a researcher, I'm a researcher** — same level, different toolset (infinite memory + access to every paper).
+
+**For**: PhD students, postdocs, faculty, industry researchers, curious learners — *peer* calibrates to your role.
+
+**Built on** [`pi-agent-core`](https://github.com/earendil-works/pi). **Local-first. BYOK. Apache 2.0.**
+
+---
+
+## The 90-second demo
+
+```
+$ peer shell
+welcome to peer — your research peer · 60-second setup
+What should I call you?  ▸ Ke
+What's your role?
+  1. PhD student     2. Postdoc     3. Faculty
+  4. Industry        5. Independent
+                          ▸ 1
+What's your research area?  ▸ diffusion alignment
+
+(then, naturally:)
+you ❯ what should I read first?
+peer: For diffusion alignment, start with the DPO paper (arxiv:2305.18290).
+      It introduces preference learning without explicit RL. Then build from there.
+      Want me to map the field and pull a reading list?
+you ❯ yes
+peer: ▸ map_field topic="diffusion alignment"
+      ⠋ map_field (38s)
+      ✓ mapped 41 papers · 3 subfields  → ~/.peer/notes/fields/diffusion-alignment/
+peer: 41 papers, 3 subfields, $0.05. Top 5 to read first:
+        1. DPO (arxiv:2305.18290) — foundational
+        2. RLHF (arxiv:2203.02155)
+        3. Constitutional AI (arxiv:2212.08073)
+        4. ...
+      Reading trail saved. `peer next` continues where you left off.
+```
+
+That's the whole journey: onboard → talk → tools-on-rails → compounding library. Try it. Five minutes.
 
 ```
 $ peer map "mechanistic interpretability"
@@ -35,7 +71,7 @@ The output is a 2000-word PhD-quality field overview, a tiered reading list, ide
 ## Install
 
 ```bash
-npm install -g @KeWang0622/peer
+npm install -g @kewang/peer
 ```
 
 Set your keys (BYOK):
