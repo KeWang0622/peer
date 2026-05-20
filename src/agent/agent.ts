@@ -1,55 +1,85 @@
+import * as fs from "node:fs";
 import { Agent } from "@earendil-works/pi-agent-core";
 import { getModel } from "@earendil-works/pi-ai";
 import { createCodingTools } from "@earendil-works/pi-coding-agent";
 import { buildProfTools } from "./tools.js";
 import { countPapers } from "../db/client.js";
 import { paths } from "../config/paths.js";
+import { findRole, DEFAULT_ROLE, type Role } from "./roles.js";
 
-const SYSTEM_PROMPT_BASE = `You are prof — a terminal-native research buddy for a CS/ML PhD researcher.
+const SYSTEM_PROMPT_BASE = `You are lit — a terminal-native research companion. Slogan: research is a journey.
 
-Motto: research is a journey.
+You serve ONE researcher. Their role is configured in their profile; calibrate accordingly (see ROLE block below).
 
 You have two kinds of tools:
 
-A) RESEARCH TOOLS (prof's domain):
+A) RESEARCH TOOLS (lit's domain):
    read_paper, map_field, ask_library, find_citations, find_gap,
    next_paper, daily_picks, brainstorm_idea, library_status, list_library
 
-B) FILE/SHELL TOOLS (general):
+B) FILE/SHELL TOOLS (general purpose):
    read, write, edit, bash, grep, find, ls
-   Use these for: saving HTML/LaTeX/markdown files the user asks about,
-   running scripts, organizing their library, opening files, etc.
+   Use these for: saving HTML/LaTeX/markdown files, running scripts,
+   organizing their library, opening files, etc.
 
-You can do everything pi-coding-agent does (write files, run shell)
-PLUS everything prof's research tools enable. Pick the right tool per task.
-
-Working directory is ~/.prof — that's where the user's research lives.
-Their library is in ~/.prof/prof.db (SQLite) with markdown notes in
-~/.prof/notes/. When in doubt about WHERE to write, use ~/.prof/notes/.
+Working directory is ~/.prof (legacy name; the binary is now \`lit\`).
+Library: ~/.prof/prof.db. Notes: ~/.prof/notes/. Save user-requested
+files there by default unless they specify another path.
 
 Behaviors:
 - Be terse. Researchers are busy.
-- When the user greets you ("hello"), respond warmly in 1-2 sentences then
-  immediately ask one focused question to get them moving (don't dump a help
-  table — be a conversational guide).
-- For brand-new users (empty library), start an onboarding conversation:
-  ask their research area, offer to map it, suggest seeding their library.
-- If a question is substantive and library has papers, call ask_library.
+- Greet warmly in 1-2 sentences, then one focused question.
+- For brand-new users (empty library), guide an onboarding conversation.
+- Substantive question + library has papers → call ask_library.
 - "What should I read next?" → call next_paper.
-- "Save this as a file" → use write tool.
-- "Open / show / read this file" → use read tool.
-- Always honor reading trails. Use next_paper to continue them.
-- If the user asks for something you can do (save a file, etc.) and you
-  hesitate, just do it. Don't lecture about your limitations — you HAVE the tools.
+- "Save this as a file" → use write tool. Don't lecture about your limitations — you HAVE the tools.
+- Honor reading trails — use next_paper to continue them.
 - Cite papers with (arxiv:ID) when you mention them.
+- Style: plain English, no emoji, no headings unless asked, prefer 3-7 line answers.`;
 
-Style: plain English, no emoji, no headings unless asked, prefer 3-7 line answers.`;
+interface ProfileSnapshot {
+  name: string | null;
+  role: Role;
+  primarySubfield: string | null;
+}
 
-function profileFragment(): string {
-  // Lightweight context fragment for the model
+function readProfile(): ProfileSnapshot {
+  try {
+    const p = paths.profile();
+    if (!fs.existsSync(p)) return { name: null, role: DEFAULT_ROLE, primarySubfield: null };
+    const md = fs.readFileSync(p, "utf-8");
+    const fm = md.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/);
+    if (!fm) return { name: null, role: DEFAULT_ROLE, primarySubfield: null };
+    const yaml = fm[1] ?? "";
+    const name = yaml.match(/^name:\s*"?([^"\n]+)"?/m)?.[1]?.trim() ?? null;
+    const roleRaw = yaml.match(/^role:\s*([a-z_]+)/im)?.[1]?.trim();
+    const subfield = yaml.match(/^primary_subfield:\s*"?([^"\n]+)"?/m)?.[1]?.trim() ?? null;
+    const validRole: Role = findRole(roleRaw ?? "")?.id ?? DEFAULT_ROLE;
+    return { name, role: validRole, primarySubfield: subfield === "null" ? null : subfield };
+  } catch {
+    return { name: null, role: DEFAULT_ROLE, primarySubfield: null };
+  }
+}
+
+function buildSystemPrompt(): string {
+  const profile = readProfile();
+  const role = findRole(profile.role) ?? findRole(DEFAULT_ROLE)!;
   const lib = countPapers();
-  const home = paths.home();
-  return `\n\nContext snapshot:\n- library has ${lib} paper${lib === 1 ? "" : "s"}\n- working dir: ${home}\n- if user wants to save a file with no path, default to ${home}/notes/<slug>.md`;
+
+  return [
+    SYSTEM_PROMPT_BASE,
+    "",
+    "═══ ROLE ═══",
+    role.promptFragment,
+    "",
+    "═══ CONTEXT SNAPSHOT ═══",
+    `- user: ${profile.name ?? "(unknown)"}`,
+    `- role: ${profile.role}`,
+    `- primary subfield: ${profile.primarySubfield ?? "(not yet set)"}`,
+    `- library: ${lib} paper${lib === 1 ? "" : "s"}`,
+    `- working dir: ${paths.home()}`,
+    `- if user wants to save a file with no path, default to ${paths.home()}/notes/<slug>.md`,
+  ].join("\n");
 }
 
 export function createProfAgent(opts: { verbose?: boolean } = {}): Agent {
@@ -59,7 +89,7 @@ export function createProfAgent(opts: { verbose?: boolean } = {}): Agent {
 
   return new Agent({
     initialState: {
-      systemPrompt: SYSTEM_PROMPT_BASE + profileFragment(),
+      systemPrompt: buildSystemPrompt(),
       model: getModel("anthropic", "claude-sonnet-4-6"),
       thinkingLevel: "low",
       tools,
@@ -68,5 +98,5 @@ export function createProfAgent(opts: { verbose?: boolean } = {}): Agent {
   });
 }
 
-// keep both names exported during transition
+// Legacy alias
 export const buildProfAgent = createProfAgent;

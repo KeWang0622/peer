@@ -15,7 +15,7 @@ import { printWelcome } from "./welcome.js";
 const META_COMMANDS = ["help", "clear", "reset", "exit", "quit"] as const;
 
 export async function cmdShell(opts: { verbose?: boolean } = {}): Promise<void> {
-  printWelcome();
+  printWelcome("lit");
 
   // Deterministic first-run onboarding (no library, no profile → 60-sec setup)
   const { isFirstRun, runFirstRun, executeOutcome } = await import("./onboard-firstrun.js");

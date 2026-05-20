@@ -22,11 +22,12 @@ import { paths } from "../src/config/paths.js";
 import { countPapers } from "../src/db/client.js";
 import { totalCostUsd } from "../src/lib/llm.js";
 
-const VERSION = "0.0.1-alpha.5";
+const VERSION = "0.0.1-alpha.6";
+const BRAND = "lit";
 
 function printHelp(): void {
   console.log(`
-prof v${VERSION}  ·  research is a journey
+${BRAND} v${VERSION}  ·  research is a journey  (legacy alias: prof)
 
 USAGE
   prof                          print welcome + start-here links
@@ -255,7 +256,7 @@ async function main(): Promise<void> {
   validateCommand(command);
 
   if (flags.version) {
-    console.log(`prof ${VERSION}`);
+    console.log(`${BRAND} ${VERSION}`);
     return;
   }
 
@@ -266,7 +267,7 @@ async function main(): Promise<void> {
 
   if (!command) {
     const { printWelcome } = await import("../src/tui/welcome.js");
-    printWelcome();
+    printWelcome(BRAND);
     return;
   }
 
