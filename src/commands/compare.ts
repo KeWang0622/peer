@@ -1,5 +1,5 @@
 /**
- * `prof compare <id1> <id2>` — side-by-side comparison of two papers.
+ * `peer compare <id1> <id2>` — side-by-side comparison of two papers.
  *
  * Lets PhDs synthesize what's similar and what's different between two papers.
  */

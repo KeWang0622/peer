@@ -8,7 +8,7 @@ export function claude(): Anthropic {
   if (_claude) return _claude;
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY not set. prof requires Claude for reasoning.");
+    throw new Error("ANTHROPIC_API_KEY not set. peer requires Claude for reasoning.");
   }
   _claude = new Anthropic({ apiKey });
   return _claude;
@@ -18,7 +18,7 @@ export function openai(): OpenAI {
   if (_openai) return _openai;
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY not set. prof uses OpenAI for embeddings.");
+    throw new Error("OPENAI_API_KEY not set. peer uses OpenAI for embeddings.");
   }
   _openai = new OpenAI({ apiKey });
   return _openai;

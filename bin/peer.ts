@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * `prof` CLI entry point.
+ * `peer` CLI entry point.
  *
  * Subcommands:
- *   prof read <arxiv-id|doi|url>
- *   prof map  <topic>
- *   prof cite <claim>
- *   prof gap  <X> and <Y>
- *   prof doctor
- *   prof daily
- *   prof ask <question>   (stub for v1)
- *   prof onboard --scholar <url>   (stub for v1)
+ *   peer read <arxiv-id|doi|url>
+ *   peer map  <topic>
+ *   peer cite <claim>
+ *   peer gap  <X> and <Y>
+ *   peer doctor
+ *   peer daily
+ *   peer ask <question>   (stub for v1)
+ *   peer onboard --scholar <url>   (stub for v1)
  *
  * No subcommand → print help + version.
  */
@@ -30,13 +30,13 @@ function printHelp(): void {
 ${BRAND} v${VERSION}  ·  your research peer  (legacy aliases: lit, prof)
 
 USAGE
-  prof                          print welcome + start-here links
-  prof <command> [args]
+  peer                          print welcome + start-here links
+  peer <command> [args]
 
 COMMANDS — research is a journey
 
   start / orient
-    onboard                       tell prof who you are
+    onboard                       tell peer who you are
     map        <topic>            5-minute field overview + reading list
     daily                         today's top arxiv picks
 
@@ -77,7 +77,7 @@ ENV
   ANTHROPIC_API_KEY            required, the brain
   OPENAI_API_KEY               required for map command (embeddings)
   SEMANTIC_SCHOLAR_API_KEY     optional, higher rate limits
-  PROF_HOME                    override ~/.prof location
+  PEER_HOME (or PROF_HOME)     override ~/.peer location
 
 NOTES
   All data is local at ${paths.home()}
@@ -278,7 +278,7 @@ async function main(): Promise<void> {
     case "read": {
       const input = args[0];
       if (!input) {
-        console.error("Usage: prof read <arxiv-id|doi|url>");
+        console.error("Usage: peer read <arxiv-id|doi|url>");
         process.exit(1);
       }
       const result = await profRead(input, { verbose });
@@ -292,7 +292,7 @@ async function main(): Promise<void> {
     case "map": {
       const topic = args.join(" ").trim();
       if (!topic) {
-        console.error('Usage: prof map "<topic>"');
+        console.error('Usage: peer map "<topic>"');
         process.exit(1);
       }
       await cmdMap(topic, { limit, verbose });
@@ -302,7 +302,7 @@ async function main(): Promise<void> {
     case "cite": {
       const claim = args.join(" ").trim();
       if (!claim) {
-        console.error('Usage: prof cite "<claim>"');
+        console.error('Usage: peer cite "<claim>"');
         process.exit(1);
       }
       const { cmdCite } = await import("../src/commands/cite.js");
@@ -313,7 +313,7 @@ async function main(): Promise<void> {
     case "gap": {
       const topics = args.join(" ").trim();
       if (!topics) {
-        console.error('Usage: prof gap "<X> and <Y>"');
+        console.error('Usage: peer gap "<X> and <Y>"');
         process.exit(1);
       }
       const { cmdGap } = await import("../src/commands/gap.js");
@@ -332,7 +332,7 @@ async function main(): Promise<void> {
     case "ask": {
       const question = args.join(" ").trim();
       if (!question) {
-        console.error('Usage: prof ask "<question>"');
+        console.error('Usage: peer ask "<question>"');
         process.exit(1);
       }
       const { cmdAsk } = await import("../src/commands/ask.js");
@@ -361,7 +361,7 @@ async function main(): Promise<void> {
     case "cite": {
       const claim = args.join(" ").trim();
       if (!claim) {
-        console.error('Usage: prof cite "<claim>"');
+        console.error('Usage: peer cite "<claim>"');
         process.exit(1);
       }
       const { cmdCite } = await import("../src/commands/cite.js");
@@ -372,7 +372,7 @@ async function main(): Promise<void> {
     case "gap": {
       const topics = args.join(" ").trim();
       if (!topics) {
-        console.error('Usage: prof gap "<X> and <Y>"');
+        console.error('Usage: peer gap "<X> and <Y>"');
         process.exit(1);
       }
       const { cmdGap } = await import("../src/commands/gap.js");
@@ -391,7 +391,7 @@ async function main(): Promise<void> {
     case "collab": {
       const topic = args.join(" ").trim();
       if (!topic) {
-        console.error('Usage: prof collab "<topic|author>"');
+        console.error('Usage: peer collab "<topic|author>"');
         process.exit(1);
       }
       const { cmdCollab } = await import("../src/commands/collab.js");
@@ -416,7 +416,7 @@ async function main(): Promise<void> {
     case "relwork": {
       const topic = args.join(" ").trim();
       if (!topic) {
-        console.error('Usage: prof relwork "<topic>"');
+        console.error('Usage: peer relwork "<topic>"');
         process.exit(1);
       }
       const { cmdRelwork } = await import("../src/commands/relwork.js");
@@ -427,7 +427,7 @@ async function main(): Promise<void> {
     case "outline": {
       const topic = args.join(" ").trim();
       if (!topic) {
-        console.error('Usage: prof outline "<topic>"');
+        console.error('Usage: peer outline "<topic>"');
         process.exit(1);
       }
       const { cmdOutline } = await import("../src/commands/outline.js");
@@ -437,7 +437,7 @@ async function main(): Promise<void> {
 
     case "compare": {
       if (args.length < 2) {
-        console.error("Usage: prof compare <id1> <id2>");
+        console.error("Usage: peer compare <id1> <id2>");
         process.exit(1);
       }
       const { cmdCompare } = await import("../src/commands/compare.js");

@@ -1,5 +1,5 @@
 /**
- * `prof outline "<topic>"` — generate a paper outline + section sketches + suggested citations.
+ * `peer outline "<topic>"` — generate a paper outline + section sketches + suggested citations.
  *
  * The "I have a research idea and need to structure a paper" command.
  */
@@ -100,6 +100,6 @@ Be specific. Mention concrete methods, datasets, evaluation metrics. Don't pad.`
   console.log(outline);
   console.log();
   console.log(c.dim(`cost: $${(totalCostUsd() - costBefore).toFixed(4)}`));
-  console.log(c.dim("next: ") + c.bold(`prof cite "<claim>"`) + c.dim("  or  ") + c.bold(`prof relwork "<topic>"`));
+  console.log(c.dim("next: ") + c.bold(`peer cite "<claim>"`) + c.dim("  or  ") + c.bold(`peer relwork "<topic>"`));
   console.log();
 }

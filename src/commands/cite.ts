@@ -1,8 +1,8 @@
 /**
- * `prof cite "<claim>"` — find citation candidates for a writing claim.
+ * `peer cite "<claim>"` — find citation candidates for a writing claim.
  *
  * Flow:
- *   1. Retrieve local library papers with the same RAG primitive used by `prof ask`.
+ *   1. Retrieve local library papers with the same RAG primitive used by `peer ask`.
  *   2. Search external literature via Semantic Scholar, with OpenAlex fallback.
  *   3. Ask the LLM to pick the best 3-5 citations.
  *   4. Print full citation info, BibTeX entries, and a LaTeX cite command.

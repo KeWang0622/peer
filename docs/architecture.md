@@ -1,4 +1,4 @@
-# prof — architecture
+# peer — architecture
 
 A short overview. v0.0.1-alpha.
 
@@ -12,7 +12,7 @@ A short overview. v0.0.1-alpha.
 ├─────────────────────────────────────────────────────────┤
 │  L3  PERSONAL NOTES                                      │
 │      Obsidian-compatible markdown                        │
-│      ~/.prof/notes/{papers,concepts,fields,ideas}/      │
+│      ~/.peer/notes/{papers,concepts,fields,ideas}/      │
 ├─────────────────────────────────────────────────────────┤
 │  L2  SEMANTIC GRAPH                                      │
 │      typed nodes: Paper / Concept / Method / Dataset    │
@@ -32,18 +32,18 @@ A short overview. v0.0.1-alpha.
 Everything is local. One folder, one SQLite file, plus markdown.
 
 ```
-~/.prof/
-├── prof.db                 SQLite, L1+L2+L4 tables
+~/.peer/
+├── peer.db                 SQLite, L1+L2+L4 tables
 ├── notes/
 │   ├── papers/             one Obsidian-compat .md per paper read
-│   ├── fields/             output of `prof map`
+│   ├── fields/             output of `peer map`
 │   ├── concepts/           (v0.0.2)
 │   └── ideas/              (v0.0.2)
 ├── profile.md              (v0.0.2)
 └── pdf-cache/              (v0.0.2)
 ```
 
-## Data flow: `prof read`
+## Data flow: `peer read`
 
 ```
 input "2402.04494" or arxiv URL or DOI
@@ -66,10 +66,10 @@ papers row
    - upsertDataset + linkPaperDataset
    - upsertMetric
   ↓ formatNote (YAML frontmatter + body)
-~/.prof/notes/papers/<slug>.md
+~/.peer/notes/papers/<slug>.md
 ```
 
-## Data flow: `prof map`
+## Data flow: `peer map`
 
 ```
 "mechanistic interpretability"
@@ -88,15 +88,15 @@ overview.md (1500-2000 words, [[wikilinks]] to real papers)
   ↓ Claude Sonnet: open problems pass
 open-problems.md
   ↓ write reading-order.md + subfields.md + papers.json
-~/.prof/notes/fields/<slug>/
+~/.peer/notes/fields/<slug>/
 ```
 
 ## Cost model
 
 | Operation | Approx tokens | Approx cost |
 |---|---|---|
-| `prof read <paper>` | 1500 in + 600 out, Sonnet | ~$0.01 |
-| `prof map "<topic>"` | 80 papers × 200 tokens embed + 12k Sonnet | ~$0.40 |
+| `peer read <paper>` | 1500 in + 600 out, Sonnet | ~$0.01 |
+| `peer map "<topic>"` | 80 papers × 200 tokens embed + 12k Sonnet | ~$0.40 |
 
 You pay the LLM/embedding providers directly. No middleman.
 
@@ -110,7 +110,7 @@ We get for free:
 - Steering / follow-up queues
 
 We add (in v0.0.1-alpha):
-- 2 CLI commands (`prof read`, `prof map`)
+- 2 CLI commands (`peer read`, `peer map`)
 - 2 slash commands when loaded as a pi extension (`/read`, `/map`)
 - 4-layer knowledge graph schema (L1+L2 actively written; L4 stubbed)
 - Research persona system prompt fragment
@@ -123,9 +123,9 @@ Coming in v0.0.2+: the full 13-tool AgentTool[] set so `pi` users can call resea
 
 - pi extension registers commands but does NOT yet register the full AgentTool[] set
 - L4 action history table exists but no commands populate it yet
-- No sqlite-vec embedding storage (uses ephemeral embeddings during `prof map`)
+- No sqlite-vec embedding storage (uses ephemeral embeddings during `peer map`)
 - No OpenAlex fallback (S2 primary only)
-- No `prof onboard` for personalized library seeding
+- No `peer onboard` for personalized library seeding
 - No PDF parsing (`--full` flag deferred — abstract-only by default)
 
 All these land in v0.0.2 and beyond.

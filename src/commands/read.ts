@@ -1,10 +1,10 @@
 /**
- * `prof read <pdf|arxiv-id|url>`
+ * `peer read <pdf|arxiv-id|url>`
  *
  * v0.0.1-alpha scope (per viral-validation cuts):
  *   - default: abstract-only (no Marker PDF parse)
  *   - LLM extracts contribution / method / data / metric from abstract
- *   - writes markdown note to ~/.prof/notes/papers/<slug>.md
+ *   - writes markdown note to ~/.peer/notes/papers/<slug>.md
  *   - writes the paper row, then best-effort persists L1/L2 graph rows:
  *     authors/authored, concepts/paper_concepts, methods/paper_methods,
  *     datasets/paper_datasets, and metric nodes. Graph writes are one
@@ -54,7 +54,7 @@ export async function profRead(input: string, opts: { verbose?: boolean } = {}):
   if (!arxivId && !doi && !s2Id) {
     throw new Error(
       `Could not resolve "${input}" as arxiv id, DOI, or paper URL. ` +
-        `Try: prof read 2402.04494  |  prof read 10.1234/abc  |  prof read https://arxiv.org/abs/2402.04494`,
+        `Try: peer read 2402.04494  |  peer read 10.1234/abc  |  peer read https://arxiv.org/abs/2402.04494`,
     );
   }
 
@@ -177,7 +177,7 @@ export async function profRead(input: string, opts: { verbose?: boolean } = {}):
 // ============================================================
 
 function extractionSystem(): string {
-  return `You are an extraction component of prof, a research operating system.
+  return `You are an extraction component of peer, a research operating system.
 You take an academic paper's title + abstract and extract its key semantic structure.
 Output ONLY a JSON object matching the requested schema. No prose, no markdown fences.
 Be precise. If a field cannot be determined from the abstract alone, use empty string or empty array.

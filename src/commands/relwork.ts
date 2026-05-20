@@ -1,5 +1,5 @@
 /**
- * `prof relwork <topic>` — draft a related-work section.
+ * `peer relwork <topic>` — draft a related-work section.
  *
  * The "I'm writing the paper" command. Uses your library + S2/OpenAlex
  * to draft a structured Related Work section with proper citations.

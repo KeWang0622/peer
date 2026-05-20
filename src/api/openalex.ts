@@ -10,7 +10,7 @@ import { fetchWithRetry } from "../lib/retry.js";
 const BASE = "https://api.openalex.org";
 
 function ua(): string {
-  const email = process.env.OPENALEX_EMAIL ?? "prof-cli@example.com";
+  const email = process.env.OPENALEX_EMAIL ?? "peer-cli@example.com";
   return `prof/0.0.1 (https://github.com/kewang/prof; mailto:${email})`;
 }
 

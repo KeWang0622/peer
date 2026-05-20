@@ -3,24 +3,27 @@ import * as os from "node:os";
 import * as fs from "node:fs";
 
 /**
- * All filesystem paths used by prof.
- * Override base via PROF_HOME env var (used in tests).
+ * All filesystem paths used by peer.
+ * Override base via PEER_HOME env var (or legacy PROF_HOME).
  */
-export const profHome = (): string =>
-  process.env.PROF_HOME ?? path.join(os.homedir(), ".prof");
+export const peerHome = (): string =>
+  process.env.PEER_HOME ?? process.env.PROF_HOME ?? path.join(os.homedir(), ".peer");
+
+// Legacy alias — some modules still call profHome()
+export const profHome = peerHome;
 
 export const paths = {
-  home: profHome,
-  db: () => path.join(profHome(), "prof.db"),
-  settings: () => path.join(profHome(), "settings.toml"),
-  auth: () => path.join(profHome(), "auth.json"),
-  notes: () => path.join(profHome(), "notes"),
-  papersNotes: () => path.join(profHome(), "notes", "papers"),
-  conceptsNotes: () => path.join(profHome(), "notes", "concepts"),
-  fieldsNotes: () => path.join(profHome(), "notes", "fields"),
-  ideasNotes: () => path.join(profHome(), "notes", "ideas"),
-  pdfCache: () => path.join(profHome(), "pdf-cache"),
-  profile: () => path.join(profHome(), "profile.md"),
+  home: peerHome,
+  db: () => path.join(peerHome(), "peer.db"),
+  settings: () => path.join(peerHome(), "settings.toml"),
+  auth: () => path.join(peerHome(), "auth.json"),
+  notes: () => path.join(peerHome(), "notes"),
+  papersNotes: () => path.join(peerHome(), "notes", "papers"),
+  conceptsNotes: () => path.join(peerHome(), "notes", "concepts"),
+  fieldsNotes: () => path.join(peerHome(), "notes", "fields"),
+  ideasNotes: () => path.join(peerHome(), "notes", "ideas"),
+  pdfCache: () => path.join(peerHome(), "pdf-cache"),
+  profile: () => path.join(peerHome(), "profile.md"),
 };
 
 export function ensureDirs(): void {

@@ -1,5 +1,5 @@
 /**
- * `prof ask "<question>"` — query your library.
+ * `peer ask "<question>"` — query your library.
  *
  * Flow:
  *   1. Embed the question.
@@ -41,7 +41,7 @@ export async function cmdAsk(question: string, opts: AskOptions = {}): Promise<A
 
   // Empty library short-circuit. Avoid spending on embeddings if there's nothing to retrieve.
   if (countPapers() === 0) {
-    console.log("Your library is empty. Run `prof read <arxiv-id>` first or `prof map <topic>` to seed it.");
+    console.log("Your library is empty. Run `peer read <arxiv-id>` first or `peer map <topic>` to seed it.");
     return { answer: "", hits: [], cost: 0 };
   }
 
@@ -53,7 +53,7 @@ export async function cmdAsk(question: string, opts: AskOptions = {}): Promise<A
   });
 
   if (retrieval.hits.length === 0) {
-    console.log("No relevant papers found in your library. Try `prof read <arxiv-id>` to add more.");
+    console.log("No relevant papers found in your library. Try `peer read <arxiv-id>` to add more.");
     return { answer: "", hits: [], cost: retrieval.embedCost.costUsd };
   }
 

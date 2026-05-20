@@ -1,5 +1,5 @@
 /**
- * Natural-language REPL for `prof shell`.
+ * Natural-language REPL for `peer shell`.
  *
  * This shell is a real pi-agent-core Agent: user text goes straight to the
  * model, which decides when to call prof's research tools.
@@ -147,7 +147,7 @@ function showHelpHint(): void {
 
 function showHelp(): void {
   console.log();
-  console.log(c.bold("prof shell"));
+  console.log(c.bold("peer shell"));
   console.log(c.dim("Natural-language research assistant. The model chooses tools like read_paper, map_field, ask_library, find_citations, find_gap, next_paper, daily_picks, brainstorm_idea, library_status, and list_library."));
   console.log();
   console.log(c.bold("Try:"));

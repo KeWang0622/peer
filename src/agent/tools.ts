@@ -1,5 +1,5 @@
 /**
- * Agent tools: each prof command exposed as an AgentTool so the LLM can
+ * Agent tools: each peer command exposed as an AgentTool so the LLM can
  * call them autonomously based on natural language.
  *
  * Tools that print to stdout (most of them) capture output into a string
@@ -117,7 +117,7 @@ export function buildProfTools(verbose: boolean = false): ProfTool[] {
       execute: async (_id, params) => {
         if (countPapers() === 0) {
           return asText(
-            "The user's library is empty. Suggest they run `prof read <arxiv-id>` to seed their library first, or use `map_field` to learn about a topic from scratch.",
+            "The user's library is empty. Suggest they run `peer read <arxiv-id>` to seed their library first, or use `map_field` to learn about a topic from scratch.",
           );
         }
         const { cmdAsk } = await import("../commands/ask.js");

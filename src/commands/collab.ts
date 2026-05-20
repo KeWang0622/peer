@@ -1,5 +1,5 @@
 /**
- * `prof collab "<topic|author>"` — find potential collaborators / labs.
+ * `peer collab "<topic|author>"` — find potential collaborators / labs.
  *
  * Two modes:
  *   1. Topic: find active researchers publishing on this topic recently.

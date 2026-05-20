@@ -25,8 +25,8 @@ B) FILE/SHELL TOOLS (general purpose):
    Use these for: saving HTML/LaTeX/markdown files, running scripts,
    organizing their library, opening files, etc.
 
-Working directory is ~/.prof (legacy path; the binary is now \`peer\`).
-Library: ~/.prof/prof.db. Notes: ~/.prof/notes/. Save user-requested
+Working directory is ~/.peer (legacy path; the binary is now \`peer\`).
+Library: ~/.peer/peer.db. Notes: ~/.peer/notes/. Save user-requested
 files there by default unless they specify another path.
 
 Behaviors:

@@ -1,5 +1,5 @@
 /**
- * Retrieval-augmented generation primitives for `prof ask`.
+ * Retrieval-augmented generation primitives for `peer ask`.
  *
  * Pipeline (v0.0.1):
  *   1. Embed query + all library papers (title + abstract).
@@ -76,7 +76,7 @@ export function readNoteForPaper(p: PaperRow, charCap: number = DEFAULT_NOTE_CAP
   }
 }
 
-/** Mirrors the slug format used by `prof read` so retrieval can find notes. */
+/** Mirrors the slug format used by `peer read` so retrieval can find notes. */
 function makeSlug(title: string, year: number | null): string {
   const yearPart = year ? `${year}-` : "";
   const slug = title

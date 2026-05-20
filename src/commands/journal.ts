@@ -1,13 +1,13 @@
 /**
- * `prof journal` — your research diary.
+ * `peer journal` — your research diary.
  *
  * Usage:
- *   prof journal                      → opens an editor for today's entry
- *   prof journal "<text>"             → appends a one-liner with timestamp
- *   prof journal --read               → prints last 14 days of entries
- *   prof journal --read --days 30     → custom window
+ *   peer journal                      → opens an editor for today's entry
+ *   peer journal "<text>"             → appends a one-liner with timestamp
+ *   peer journal --read               → prints last 14 days of entries
+ *   peer journal --read --days 30     → custom window
  *
- * Storage: ~/.prof/notes/journal.md (Obsidian-compatible markdown).
+ * Storage: ~/.peer/notes/journal.md (Obsidian-compatible markdown).
  * Each entry is preceded by a `## YYYY-MM-DD HH:MM` heading for queryability.
  */
 import * as fs from "node:fs";
@@ -31,7 +31,7 @@ function ensureJournal(): string {
   if (!fs.existsSync(p)) {
     fs.writeFileSync(
       p,
-      `# prof — research journal
+      `# peer — research journal
 
 Research is a journey. This file is your trail.
 
@@ -90,7 +90,7 @@ export async function cmdJournal(rawArgs: string[], opts: { read?: boolean; days
 
 function printRecentEntries(p: string, days: number): void {
   if (!fs.existsSync(p)) {
-    console.log("No journal entries yet. Try: prof journal \"first thought of the day\"");
+    console.log("No journal entries yet. Try: peer journal \"first thought of the day\"");
     return;
   }
   const md = fs.readFileSync(p, "utf-8");

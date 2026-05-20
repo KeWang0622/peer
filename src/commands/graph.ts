@@ -1,15 +1,15 @@
 /**
- * `prof graph` — open an interactive knowledge-graph visualization
+ * `peer graph` — open an interactive knowledge-graph visualization
  * of the user's library in the default browser.
  *
  * Pipeline:
  *   1. Build {nodes, edges} from the SQLite DB (papers, concepts, authors).
  *   2. Render a self-contained HTML page with D3.js (CDN).
- *   3. Write to ~/.prof/notes/graph.html.
+ *   3. Write to ~/.peer/notes/graph.html.
  *   4. Try to open via `open` (mac) / `xdg-open` (linux) / `start` (windows).
  *
  * If the library is too small (< 5 papers) we bail out with a friendly
- * "go run `prof read` or `prof onboard` first" message.
+ * "go run `peer read` or `peer onboard` first" message.
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -37,8 +37,8 @@ export async function cmdGraph(opts: GraphCmdOptions = {}): Promise<void> {
     console.log(`\nYour library is small (${graph.paperCount} paper${graph.paperCount === 1 ? "" : "s"}).`);
     console.log(`A knowledge graph needs at least ${MIN_PAPERS} papers to be meaningful.\n`);
     console.log(`Try:`);
-    console.log(`  prof read <arxiv-id|doi|url>   — add a paper`);
-    console.log(`  prof onboard                    — seed your library`);
+    console.log(`  peer read <arxiv-id|doi|url>   — add a paper`);
+    console.log(`  peer onboard                    — seed your library`);
     console.log(`\nResearch is a journey. Take the first step.\n`);
     return;
   }

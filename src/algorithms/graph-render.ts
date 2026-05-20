@@ -225,7 +225,7 @@ export function renderGraphHtml(graph: KnowledgeGraph): string {
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>prof graph — your research journey</title>
+<title>peer graph — your research journey</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
@@ -297,7 +297,7 @@ export function renderGraphHtml(graph: KnowledgeGraph): string {
   <svg id="canvas"></svg>
 
   <div class="legend">
-    <h1>prof graph</h1>
+    <h1>peer graph</h1>
     <div class="slogan">Research is a journey.</div>
     <div class="row" style="margin-top:8px;"><span class="swatch paper"></span> papers</div>
     <div class="row"><span class="swatch concept"></span> concepts</div>

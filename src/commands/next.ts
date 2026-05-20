@@ -1,12 +1,12 @@
 /**
- * `prof next "<goal>"` — what should I read next, given my journey so far.
+ * `peer next "<goal>"` — what should I read next, given my journey so far.
  *
  * This is the cohesion glue. It uses your library + action history + a goal
  * to recommend the single most useful next paper.
  *
  * Usage:
- *   prof next "write a sparse autoencoder paper"
- *   prof next                  → continue your most recent active trail
+ *   peer next "write a sparse autoencoder paper"
+ *   peer next                  → continue your most recent active trail
  */
 import { randomUUID, createHash } from "node:crypto";
 import { db, type PaperRow, paperCanonicalId, upsertPaper, nowEpoch } from "../db/client.js";
@@ -110,7 +110,7 @@ export async function cmdNext(goalArg: string | null, opts: { verbose?: boolean 
   if (!goal) {
     const active = getActiveTrail();
     if (!active) {
-      console.error('Usage: prof next "<your research goal>"');
+      console.error('Usage: peer next "<your research goal>"');
       console.error("(no prior trail found — give a goal to start one)");
       process.exit(1);
     }
@@ -229,7 +229,7 @@ export async function cmdNext(goalArg: string | null, opts: { verbose?: boolean 
   }
 
   if (candidates.length === 0) {
-    console.log("No candidates found. Try `prof read <id>` to seed your library or refine your goal.");
+    console.log("No candidates found. Try `peer read <id>` to seed your library or refine your goal.");
     return;
   }
 
@@ -293,7 +293,7 @@ In 2-4 sentences answer:
     console.log();
   }
 
-  const cmd = top.arxivId ? `prof read ${top.arxivId}` : top.doi ? `prof read ${top.doi}` : `prof read "${top.title.slice(0, 40)}..."`;
+  const cmd = top.arxivId ? `peer read ${top.arxivId}` : top.doi ? `peer read ${top.doi}` : `peer read "${top.title.slice(0, 40)}..."`;
   console.log(c.dim("when ready: ") + c.bold(cmd));
   console.log(c.dim(`trail: ${trail.id} · step ${nextPos} queued · cost: $${(totalCostUsd() - costBefore).toFixed(4)}`));
   console.log();

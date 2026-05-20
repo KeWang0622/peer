@@ -12,7 +12,7 @@
 Built on [`pi-agent-core`](https://github.com/earendil-works/pi). Local-first. BYOK. Apache 2.0.
 
 ```
-$ prof map "mechanistic interpretability"
+$ peer map "mechanistic interpretability"
 
 Mapping field: "mechanistic interpretability"
   · searching: Semantic Scholar
@@ -23,9 +23,9 @@ Mapping field: "mechanistic interpretability"
 ✓ Mapped in 38s. Cost: $0.05
 
   41 papers · 3 subfields
-  → ~/.prof/notes/fields/mechanistic-interpretability/
+  → ~/.peer/notes/fields/mechanistic-interpretability/
 
-Try: cat ~/.prof/notes/fields/mechanistic-interpretability/overview.md
+Try: cat ~/.peer/notes/fields/mechanistic-interpretability/overview.md
 ```
 
 The output is a 2000-word PhD-quality field overview, a tiered reading list, identified subfields, and open problems. **In 38 seconds, for $0.05.**
@@ -50,13 +50,13 @@ export SEMANTIC_SCHOLAR_API_KEY=...
 Verify:
 
 ```bash
-prof doctor
+peer doctor
 ```
 
 Then go on the journey:
 
 ```bash
-prof onboard
+peer onboard
 ```
 
 ---
@@ -67,48 +67,48 @@ prof onboard
 
 | Command | Use when |
 |---|---|
-| `prof onboard` | Day 1. Tell prof your Google Scholar URL or paste 5 arxiv IDs. It seeds your library. |
-| `prof map "<topic>"` | Walking into a new area cold. Get a PhD-quality field map in 5 minutes. |
-| `prof daily` | Morning ritual. Today's top arxiv papers, ranked by what's in your library. |
+| `peer onboard` | Day 1. Tell peer your Google Scholar URL or paste 5 arxiv IDs. It seeds your library. |
+| `peer map "<topic>"` | Walking into a new area cold. Get a PhD-quality field map in 5 minutes. |
+| `peer daily` | Morning ritual. Today's top arxiv papers, ranked by what's in your library. |
 
 ### think — what should I work on?
 
 | Command | Use when |
 |---|---|
-| `prof brainstorm "<vague idea>"` | You have a half-formed thought. Expand into 3 framings + 5 adjacent angles. |
-| `prof gap "<X> and <Y>"` | Looking for a thesis topic. Find sparse intersections + concrete questions. |
-| `prof next "<goal>"` | "What should I read next toward X?" Picks one paper + alternates. Persists as a trail — re-run to continue. |
+| `peer brainstorm "<vague idea>"` | You have a half-formed thought. Expand into 3 framings + 5 adjacent angles. |
+| `peer gap "<X> and <Y>"` | Looking for a thesis topic. Find sparse intersections + concrete questions. |
+| `peer next "<goal>"` | "What should I read next toward X?" Picks one paper + alternates. Persists as a trail — re-run to continue. |
 
 ### read — going deep
 
 | Command | Use when |
 |---|---|
-| `prof read <arxiv-id>` | A paper matters. Deep-read into a structured Obsidian-compatible note + L1+L2 graph. |
-| `prof ask "<question>"` | "What did I actually believe about X?" — cited Q&A over your library. |
-| `prof compare <id1> <id2>` | Two papers in your tabs. Side-by-side: shared assumptions, real differences, when to use which. |
+| `peer read <arxiv-id>` | A paper matters. Deep-read into a structured Obsidian-compatible note + L1+L2 graph. |
+| `peer ask "<question>"` | "What did I actually believe about X?" — cited Q&A over your library. |
+| `peer compare <id1> <id2>` | Two papers in your tabs. Side-by-side: shared assumptions, real differences, when to use which. |
 
 ### publish — putting words on paper
 
 | Command | Use when |
 |---|---|
-| `prof cite "<claim>"` | Writing the intro, need 3 citations to back this sentence. Returns BibTeX + `\cite{...}`. |
-| `prof relwork "<topic>"` | Drafting Related Work. Clusters your library + recent literature into thematic groups. |
-| `prof outline "<topic>"` | Sketching a paper. Title, abstract, 7 sections with bullet points, citations needed. |
+| `peer cite "<claim>"` | Writing the intro, need 3 citations to back this sentence. Returns BibTeX + `\cite{...}`. |
+| `peer relwork "<topic>"` | Drafting Related Work. Clusters your library + recent literature into thematic groups. |
+| `peer outline "<topic>"` | Sketching a paper. Title, abstract, 7 sections with bullet points, citations needed. |
 
 ### share — finding your people
 
 | Command | Use when |
 |---|---|
-| `prof collab "<topic\|author>"` | Looking for collaborators or labs. Active researchers ranked by recent papers. |
-| `prof graph` | Show me my journey. D3 force-directed knowledge graph in the browser. |
+| `peer collab "<topic\|author>"` | Looking for collaborators or labs. Active researchers ranked by recent papers. |
+| `peer graph` | Show me my journey. D3 force-directed knowledge graph in the browser. |
 
 ### reflect — the journey log
 
 | Command | Use when |
 |---|---|
-| `prof journal` | Friday evening, what did I learn this week. Markdown diary in `~/.prof/notes/journal.md`. |
-| `prof history` | Where have I been? Recent reads + library size + spend. |
-| `prof doctor` | Things feel slow. Preflight: keys, node, sqlite, network. |
+| `peer journal` | Friday evening, what did I learn this week. Markdown diary in `~/.peer/notes/journal.md`. |
+| `peer history` | Where have I been? Recent reads + library size + spend. |
+| `peer doctor` | Things feel slow. Preflight: keys, node, sqlite, network. |
 
 ---
 
@@ -116,12 +116,12 @@ prof onboard
 
 | Stage | The command you reach for most |
 |---|---|
-| First-year, lost | `prof brainstorm`, `prof map`, `prof onboard` |
-| Building first library | `prof daily`, `prof read`, `prof history` |
-| Picking a thesis | `prof gap`, `prof brainstorm`, `prof collab` |
-| Writing your first paper | `prof outline`, `prof relwork`, `prof cite`, `prof ask` |
-| Defending the thesis | `prof graph`, `prof history`, `prof relwork` |
-| Postdoc / faculty | `prof collab`, `prof daily`, `prof relwork` for grants |
+| First-year, lost | `peer brainstorm`, `peer map`, `peer onboard` |
+| Building first library | `peer daily`, `peer read`, `peer history` |
+| Picking a thesis | `peer gap`, `peer brainstorm`, `peer collab` |
+| Writing your first paper | `peer outline`, `peer relwork`, `peer cite`, `peer ask` |
+| Defending the thesis | `peer graph`, `peer history`, `peer relwork` |
+| Postdoc / faculty | `peer collab`, `peer daily`, `peer relwork` for grants |
 
 ---
 
@@ -130,12 +130,12 @@ prof onboard
 Everything is local. One folder. Open it in [Obsidian](https://obsidian.md) and it just works.
 
 ```
-~/.prof/
-├── prof.db                      # SQLite knowledge graph (L1+L2)
+~/.peer/
+├── peer.db                      # SQLite knowledge graph (L1+L2)
 ├── profile.md                   # who you are (from onboard)
 ├── notes/
 │   ├── papers/                  # one Obsidian-compat .md per paper
-│   ├── fields/                  # output of prof map
+│   ├── fields/                  # output of peer map
 │   ├── concepts/                # named concepts (v0.0.2)
 │   ├── journal.md               # your research diary
 │   └── graph.html               # interactive D3 graph
@@ -145,7 +145,7 @@ Wikilinks `[[like this]]` between papers and concepts.
 
 ---
 
-## Why prof is different
+## Why peer is different
 
 This is not Claude Code with a research preset. The schema is the product:
 
@@ -155,7 +155,7 @@ This is not Claude Code with a research preset. The schema is the product:
 - **Local-first, BYOK** — your library, your money, your data
 - **Terminal-native** — not a web app
 
-| | prof | Elicit | ResearchRabbit | Notion AI | Claude Code |
+| | peer | Elicit | ResearchRabbit | Notion AI | Claude Code |
 |---|---|---|---|---|---|
 | Compounding library | ✓ | partial | partial | – | – |
 | Cited Q&A | ✓ | ✓ | – | partial | partial |
@@ -171,16 +171,16 @@ This is not Claude Code with a research preset. The schema is the product:
 
 | Operation | Approx cost |
 |---|---|
-| `prof read <paper>` | ~$0.01 |
-| `prof daily` | ~$0.01 |
-| `prof ask "..."` | ~$0.01 |
-| `prof cite "..."` | ~$0.02 |
-| `prof map "<topic>"` | ~$0.05 (one-time per field) |
-| `prof onboard` | ~$1.20 (one-time) |
-| `prof relwork "<topic>"` | ~$0.05 |
-| `prof outline "<topic>"` | ~$0.03 |
+| `peer read <paper>` | ~$0.01 |
+| `peer daily` | ~$0.01 |
+| `peer ask "..."` | ~$0.01 |
+| `peer cite "..."` | ~$0.02 |
+| `peer map "<topic>"` | ~$0.05 (one-time per field) |
+| `peer onboard` | ~$1.20 (one-time) |
+| `peer relwork "<topic>"` | ~$0.05 |
+| `peer outline "<topic>"` | ~$0.03 |
 
-You pay your provider directly. Run `prof history` to track spend.
+You pay your provider directly. Run `peer history` to track spend.
 
 ---
 
@@ -190,18 +190,18 @@ You pay your provider directly. Run `prof history` to track spend.
 
 ### What's missing (v0.0.2 backlog)
 
-- Full-PDF parsing (`prof read --full` flag) — currently we only read abstracts
+- Full-PDF parsing (`peer read --full` flag) — currently we only read abstracts
 - Persistent embedding cache (sqlite-vec) — currently re-embeds every call
 - Tests for the newer commands (cite, gap, compare, outline, relwork, brainstorm, collab)
 - Full `AgentTool[]` registration when used as a pi extension
 - Zotero / BibTeX library import
-- Interactive REPL shell (`prof shell`)
+- Interactive REPL shell (`peer shell`)
 - Voice mode via OpenAI Realtime
 
 ### Roadmap
 
 - **v0.0.2** — the polish & integrity release: PDF parse, embed cache, full pi extension, tests
-- **v0.1** — collaboration: `prof watch`, `prof export`, Zotero sync, `prof rebuttal`
+- **v0.1** — collaboration: `peer watch`, `peer export`, Zotero sync, `peer rebuttal`
 - **v1.0** — the OS: shell mode, voice mode, web companion, multi-language papers
 
 ---

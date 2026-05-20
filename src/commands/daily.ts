@@ -1,5 +1,5 @@
 /**
- * `prof daily` - rank fresh arXiv RSS papers against the user's library.
+ * `peer daily` - rank fresh arXiv RSS papers against the user's library.
  */
 import * as fs from "node:fs";
 import { fetchArxivRss, type ArxivRssEntry } from "../api/arxiv-rss.js";
@@ -34,7 +34,7 @@ export async function cmdDaily(opts: { verbose?: boolean } = {}): Promise<void> 
     if (opts.verbose) console.log(`  - ${msg}`);
   };
 
-  console.log("\nprof daily\n");
+  console.log("\npeer daily\n");
   console.log(`Categories: ${categories.join(", ")}`);
 
   log("fetching arXiv RSS feeds");
@@ -52,7 +52,7 @@ export async function cmdDaily(opts: { verbose?: boolean } = {}): Promise<void> 
   log(`${candidates.length} fresh candidates after dedupe and 24h filter`);
   const references = referenceTexts(profile);
   if (references.length === 0) {
-    console.log("\nNo ranking context found. Add papers with `prof read` or add keywords to ~/.prof/profile.md.");
+    console.log("\nNo ranking context found. Add papers with `peer read` or add keywords to ~/.peer/profile.md.");
     printCostSummary(Date.now() - t0, costBefore);
     return;
   }

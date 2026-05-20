@@ -1,5 +1,5 @@
 /**
- * `prof onboard` — first-run setup.
+ * `peer onboard` — first-run setup.
  *
  * Sequential terminal flow (no TUI overlay):
  *   Step 1: collect Scholar URL OR arxiv IDs OR skip
@@ -72,7 +72,7 @@ export async function cmdOnboard(opts: OnboardOptions = {}): Promise<void> {
   }
 
   writeln("");
-  writeln("prof — first run");
+  writeln("peer — first run");
   writeln("");
 
   // ---- Step 1 ----
@@ -90,8 +90,8 @@ export async function cmdOnboard(opts: OnboardOptions = {}): Promise<void> {
   if (firstLine.length === 0) {
     rl.close();
     writeln("");
-    writeln("Skipped. You can re-run `prof onboard` anytime.");
-    writeln("Try: prof map \"<your field>\"  ·  prof read <arxiv-id>");
+    writeln("Skipped. You can re-run `peer onboard` anytime.");
+    writeln("Try: peer map \"<your field>\"  ·  peer read <arxiv-id>");
     return;
   }
 
@@ -115,7 +115,7 @@ export async function cmdOnboard(opts: OnboardOptions = {}): Promise<void> {
     rl.close();
     writeln("");
     writeln(`Sorry, "${firstLine}" doesn't look like a Scholar URL or arxiv id.`);
-    writeln("Re-run `prof onboard` and try again.");
+    writeln("Re-run `peer onboard` and try again.");
     process.exitCode = 1;
     return;
   }
@@ -162,7 +162,7 @@ export async function cmdOnboard(opts: OnboardOptions = {}): Promise<void> {
       writeln(`  ✓ Resolved ${s2Papers.length} via Semantic Scholar`);
     } catch (err) {
       writeln(`  ✗ Scholar fetch failed: ${(err as Error).message}`);
-      writeln("  → Falling back: please re-run `prof onboard` and paste arxiv IDs instead.");
+      writeln("  → Falling back: please re-run `peer onboard` and paste arxiv IDs instead.");
       process.exitCode = 1;
       return;
     }
@@ -276,9 +276,9 @@ export async function cmdOnboard(opts: OnboardOptions = {}): Promise<void> {
   const totalCost = totalCostUsd() + profileResult.cost;
   writeln("");
   writeln(`Done! Cost: $${totalCost.toFixed(2)}. Try:`);
-  writeln("  prof daily          today's picks");
-  writeln('  prof map "<topic>"  learn a field');
-  writeln('  prof ask "..."      query your library');
+  writeln("  peer daily          today's picks");
+  writeln('  peer map "<topic>"  learn a field');
+  writeln('  peer ask "..."      query your library');
   writeln("");
 }
 

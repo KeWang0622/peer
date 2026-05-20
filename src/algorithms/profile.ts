@@ -8,7 +8,7 @@
  *   - a list of arxiv ids (fetched directly via the arxiv client)
  *
  * Output:
- *   - profile.md at ~/.prof/profile.md with YAML frontmatter capturing
+ *   - profile.md at ~/.peer/profile.md with YAML frontmatter capturing
  *     name, scholar_url, primary_subfield, secondary_subfields, coauthors,
  *     onboarded_at
  *   - papers persisted to SQLite
@@ -501,7 +501,7 @@ ${coauthorBlock}
 ${papersBlock || "_none — onboarding skipped or failed_"}
 
 ---
-_Edit this file by hand. \`prof\` reads the YAML frontmatter at the top to personalize future commands._
+_Edit this file by hand. \`peer\` reads the YAML frontmatter at the top to personalize future commands._
 `;
 }
 

@@ -11,4 +11,4 @@ Behaviors:
 - Prefer markdown output with clear section headers.
 - Default thinking level for research questions: medium. For deep reads: high.
 
-The user's library and notes live in `~/.prof/`. Their command output goes to `~/.prof/notes/`.
+The user's library and notes live in `~/.peer/`. Their command output goes to `~/.peer/notes/`.

@@ -1,5 +1,5 @@
 /**
- * `prof gap "<X> and <Y>"` — look for sparse intersections between topics.
+ * `peer gap "<X> and <Y>"` — look for sparse intersections between topics.
  *
  * The command estimates whether a topic intersection is well explored by
  * searching external indexes, then asks the LLM for concrete research
@@ -49,7 +49,7 @@ export async function cmdGap(input: string, opts: GapOptions = {}): Promise<void
 
   const topics = parseTopics(input);
   if (topics.length === 0) {
-    throw new Error("No topics found. Usage: prof gap \"<X> and <Y>\"");
+    throw new Error("No topics found. Usage: peer gap \"<X> and <Y>\"");
   }
 
   const intersections = buildIntersections(topics);

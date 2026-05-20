@@ -1,5 +1,5 @@
 /**
- * prof — pi-agent-core extension entry point.
+ * peer — pi-agent-core extension entry point.
  *
  * Registered when a user runs `pi install @kewang/prof`.
  * Adds:
@@ -44,7 +44,7 @@ export default function profExtension(pi: ExtensionAPI): void {
     if (!systemFragment) return;
     return {
       message: {
-        customType: "prof-system-fragment",
+        customType: "peer-system-fragment",
         content: systemFragment,
         display: false,
       },

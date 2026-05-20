@@ -1,5 +1,5 @@
 /**
- * `prof brainstorm "<vague idea>"` — divergent thinking.
+ * `peer brainstorm "<vague idea>"` — divergent thinking.
  *
  * The "I don't know what I want to research" command. Takes a vague seed,
  * expands it into 5-10 concrete framings + adjacent questions, with
@@ -39,7 +39,7 @@ export async function cmdBrainstorm(seedArg: string | null, opts: { verbose?: bo
   if (!seed) {
     seed = await promptForSeed();
     if (!seed) {
-      console.log(c.dim("(no idea — try `prof map \"<topic>\"` to learn a field first)"));
+      console.log(c.dim("(no idea — try `peer map \"<topic>\"` to learn a field first)"));
       return;
     }
   }
@@ -98,6 +98,6 @@ Three specific papers, concepts, or terms to look up next. If you can recommend 
   console.log(framings);
   console.log();
   console.log(c.dim(`cost: $${(totalCostUsd() - costBefore).toFixed(4)}`));
-  console.log(c.dim("next: ") + c.bold(`prof map "<framing-keyword>"`) + c.dim("  or  ") + c.bold(`prof gap "<X> and <Y>"`));
+  console.log(c.dim("next: ") + c.bold(`peer map "<framing-keyword>"`) + c.dim("  or  ") + c.bold(`peer gap "<X> and <Y>"`));
   console.log();
 }

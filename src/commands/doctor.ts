@@ -23,7 +23,7 @@ const CHECK_ICON: Record<CheckStatus, string> = {
 };
 
 export async function cmdDoctor(): Promise<{ passed: number; total: number; failedRequired: number }> {
-  console.log("\nprof doctor\n");
+  console.log("\npeer doctor\n");
 
   const checks = await Promise.all([
     checkNodeVersion(),
@@ -131,7 +131,7 @@ async function checkNetwork(label: string, url: string): Promise<CheckResult> {
   try {
     const response = await fetch(url, {
       method: "GET",
-      headers: { "user-agent": "prof-doctor/0.0.1" },
+      headers: { "user-agent": "peer-doctor/0.0.1" },
       signal: AbortSignal.timeout(8_000),
     });
 
@@ -153,9 +153,9 @@ async function checkProfHomeWritable(): Promise<CheckResult> {
     await fs.mkdir(home, { recursive: true });
     await fs.writeFile(testFile, "ok", "utf8");
     await fs.unlink(testFile);
-    return pass("~/.prof writable", home);
+    return pass("~/.peer writable", home);
   } catch (err) {
-    return fail("~/.prof writable", `${home}: ${errorMessage(err)}`);
+    return fail("~/.peer writable", `${home}: ${errorMessage(err)}`);
   }
 }
 

@@ -1,5 +1,5 @@
 /**
- * First-run onboarding for `prof shell`.
+ * First-run onboarding for `peer shell`.
  *
  * Deterministic, not LLM-driven. When the user has an empty library and
  * no profile.md, we walk them through a 4-question scripted flow:
