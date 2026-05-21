@@ -328,7 +328,7 @@ You pay your provider directly. Run `peer history` to track spend.
 
 ## Status
 
-`v0.0.1-alpha.10` · pre-PMF · iterating in public on the [pi-agent-core](https://github.com/earendil-works/pi) substrate. Expect rough edges and breaking changes between alpha tags. File issues — they're how the agent learns who's using it.
+`v0.0.1-alpha.11` · pre-PMF · iterating in public on the [pi-agent-core](https://github.com/earendil-works/pi) substrate. Expect rough edges and breaking changes between alpha tags. File issues — they're how the agent learns who's using it.
 
 ### Safety model
 
