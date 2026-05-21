@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>peer — a research agent that lives in your terminal</title>
+<meta name="description" content="peer is a terminal-native AI research agent for PhDs, postdocs, faculty, and curious researchers. Local-first. BYOK. Apache 2.0." />
+<meta property="og:title" content="peer — a research agent that lives in your terminal" />
+<meta property="og:description" content="Map an entire research field in 38 seconds. Local-first. BYOK. Apache 2.0." />
+<meta property="og:image" content="https://raw.githubusercontent.com/KeWang0622/peer/main/docs/images/social-card.jpg" />
+<meta property="og:url" content="https://peer-research.pika.me" />
+<meta name="twitter:card" content="summary_large_image" />
+<style>
+  :root {
+    --bg: #06070a;
+    --term: #0b0e14;
+    --term-edge: rgba(255,255,255,0.06);
+    --fg: #e8e4d8;
+    --dim: #8a8f9a;
+    --dim2: #5a6473;
+    --accent: #d4a574;
+    --ok: #b8d4a0;
+    --cyan: #8fb3c2;
+    --mono: 'JetBrains Mono','SF Mono','Menlo','Consolas',monospace;
+    --serif: 'Cormorant Garamond','Playfair Display',Georgia,serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: radial-gradient(ellipse at top, #0a0d18 0%, #04050a 80%);
+    min-height: 100vh;
+    padding: 4vh 6vw 8vh;
+  }
+  .container { max-width: 1080px; margin: 0 auto; }
+
+  /* nav */
+  nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8vh;
+  }
+  nav .brand {
+    font-family: var(--serif); font-size: 1.6rem; font-weight: 500;
+    color: var(--fg);
+    letter-spacing: 0.01em;
+  }
+  nav .links a {
+    color: var(--dim); margin-left: 24px; text-decoration: none;
+    font-size: 0.95rem; transition: color 0.2s;
+  }
+  nav .links a:hover { color: var(--fg); }
+
+  /* hero */
+  .hero { text-align: center; padding: 4vh 0 6vh; }
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(3rem, 9vw, 7.5rem);
+    font-weight: 400; line-height: 0.95; letter-spacing: -0.02em;
+    color: var(--fg);
+    margin-bottom: 1.5vh;
+    text-shadow: 0 0 60px rgba(244,238,224,0.1);
+  }
+  .hero .sub {
+    font-size: clamp(1rem, 1.8vw, 1.35rem); color: var(--dim);
+    letter-spacing: 0.06em; margin-bottom: 1vh;
+  }
+  .hero .sub em { color: var(--accent); font-style: italic; }
+  .hero .by {
+    font-size: 0.85rem; color: var(--dim2); margin-bottom: 4vh;
+    letter-spacing: 0.08em;
+  }
+
+  /* cta buttons */
+  .cta { display: flex; gap: 14px; justify-content: center; margin-top: 4vh; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 28px;
+    font-family: var(--mono); font-size: 0.95rem;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .btn.primary {
+    background: var(--fg); color: var(--term);
+  }
+  .btn.primary:hover { background: #fff; transform: translateY(-1px); }
+  .btn.ghost {
+    background: transparent; color: var(--fg);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .btn.ghost:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.04); }
+
+  /* demo */
+  .demo-wrap {
+    margin: 6vh auto;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+    aspect-ratio: 16 / 9;
+    background: #000;
+    max-width: 100%;
+  }
+  .demo-wrap video { width: 100%; height: 100%; display: block; }
+
+  /* install */
+  .section { margin: 12vh auto; max-width: 760px; }
+  .section h2 {
+    font-family: var(--serif); font-size: 2.4rem; font-weight: 400;
+    color: var(--fg); margin-bottom: 2vh;
+    text-align: center;
+  }
+  .section .lede {
+    text-align: center; color: var(--dim);
+    font-size: 1.05rem; margin-bottom: 5vh; line-height: 1.6;
+  }
+  .install-cmd {
+    background: #0a0c12; border: 1px solid var(--term-edge);
+    border-radius: 10px; padding: 22px 26px;
+    font-family: var(--mono); font-size: 1.05rem;
+    color: var(--fg);
+    overflow-x: auto;
+    margin-bottom: 2vh;
+    position: relative;
+  }
+  .install-cmd .prompt { color: var(--cyan); }
+  .install-cmd code { color: var(--fg); }
+  .install-cmd .copy {
+    position: absolute; top: 16px; right: 18px;
+    font-size: 0.8rem; color: var(--dim2);
+    background: transparent; border: 1px solid var(--term-edge);
+    padding: 4px 10px; border-radius: 6px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .install-cmd .copy:hover { color: var(--fg); border-color: rgba(255,255,255,0.2); }
+
+  .keys { color: var(--dim); font-size: 0.9rem; line-height: 1.8; }
+  .keys code {
+    color: var(--accent); background: rgba(212,165,116,0.08);
+    padding: 1px 6px; border-radius: 4px;
+  }
+
+  /* features grid */
+  .features {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px; margin-top: 4vh;
+  }
+  .feature {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 28px 26px;
+  }
+  .feature h3 {
+    font-family: var(--mono); font-size: 0.95rem;
+    color: var(--accent); margin-bottom: 12px;
+    letter-spacing: 0.04em;
+  }
+  .feature p { color: var(--dim); font-size: 0.95rem; line-height: 1.6; }
+
+  /* what it isn't */
+  .isnt {
+    background: rgba(212,165,116,0.04);
+    border-left: 2px solid var(--accent);
+    padding: 24px 28px;
+    border-radius: 0 8px 8px 0;
+    margin: 4vh 0;
+    color: var(--dim);
+    font-size: 0.98rem;
+    line-height: 1.7;
+  }
+  .isnt strong { color: var(--fg); font-weight: 500; }
+
+  /* journey table */
+  table {
+    width: 100%; border-collapse: collapse;
+    margin-top: 3vh; font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left; padding: 14px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  th {
+    color: var(--accent); font-weight: 500;
+    letter-spacing: 0.04em; font-size: 0.85rem; text-transform: uppercase;
+  }
+  td:first-child { color: var(--fg); font-family: var(--mono); width: 30%; }
+  td { color: var(--dim); }
+
+  /* footer */
+  footer {
+    margin-top: 16vh; padding-top: 6vh;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    text-align: center; color: var(--dim2);
+    font-size: 0.85rem; letter-spacing: 0.06em;
+    line-height: 1.8;
+  }
+  footer .quote {
+    font-family: var(--serif); font-size: 1.4rem;
+    color: var(--fg); margin-bottom: 16px;
+    font-style: italic;
+    letter-spacing: 0.01em;
+  }
+  footer a { color: var(--dim); text-decoration: none; border-bottom: 1px dashed var(--dim2); }
+  footer a:hover { color: var(--fg); }
+
+  /* constellation deco */
+  .const-deco {
+    position: fixed; top: 8vh; right: 4vw;
+    width: 100px; height: 100px;
+    opacity: 0.3; pointer-events: none; z-index: 0;
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 3vh 4vw 6vh; }
+    nav .links a { margin-left: 14px; }
+    .hero h1 { font-size: 3.4rem; }
+    .install-cmd { font-size: 0.85rem; padding: 16px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="const-deco" viewBox="0 0 100 100" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.7">
+  <line x1="15" y1="75" x2="40" y2="45"/>
+  <line x1="40" y1="45" x2="70" y2="55"/>
+  <line x1="70" y1="55" x2="85" y2="30"/>
+  <line x1="40" y1="45" x2="55" y2="20"/>
+  <circle cx="15" cy="75" r="2" fill="#fff"/>
+  <circle cx="40" cy="45" r="2.4" fill="#fff"/>
+  <circle cx="70" cy="55" r="2.6" fill="#d4a574"/>
+  <circle cx="85" cy="30" r="2" fill="#fff"/>
+  <circle cx="55" cy="20" r="2" fill="#fff"/>
+</svg>
+
+<div class="container">
+
+  <nav>
+    <div class="brand">peer</div>
+    <div class="links">
+      <a href="#install">install</a>
+      <a href="#what">what it is</a>
+      <a href="#journey">the journey</a>
+      <a href="https://github.com/KeWang0622/peer">github</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>peer</h1>
+    <div class="sub">a research agent that lives in your <em>terminal</em></div>
+    <div class="by">for phd students · postdocs · faculty · industry · curious learners</div>
+
+    <div class="cta">
+      <a href="#install" class="btn primary">› install in 30 seconds</a>
+      <a href="https://github.com/KeWang0622/peer" class="btn ghost">★ star on github</a>
+    </div>
+  </section>
+
+  <div class="demo-wrap">
+    <video src="https://raw.githubusercontent.com/KeWang0622/peer/main/docs/images/demo-optimized.mp4" autoplay muted loop playsinline></video>
+  </div>
+
+  <section class="section" id="what">
+    <h2>what it is</h2>
+    <p class="lede">
+      peer is a real <strong style="color:var(--fg)">agent</strong> — not a wrapper around a chat box.
+      It plans, picks tools, runs them, reads results, and decides what's next.
+      The 17 tools are research tools: map a field, find a gap, deep-read a paper, draft related work, find collaborators.
+      Local-first. BYOK. Apache 2.0.
+    </p>
+
+    <div class="isnt">
+      <strong>It's not a coding agent.</strong> It's not a chatbot. It's not another paper-search wrapper.
+      <strong>It's an agent for the research journey</strong> — from "I have no idea what to work on" to your defense.
+      It calibrates to your role (PhD student, postdoc, faculty, industry, independent) from a one-line profile.
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <h3>17 research tools</h3>
+        <p>map, gap, brainstorm, read, ask, compare, cite, relwork, outline, collab, daily, next, journal, history, graph, doctor, onboard.</p>
+      </div>
+      <div class="feature">
+        <h3>compounding library</h3>
+        <p>4-layer knowledge graph in local SQLite. Notes in plain Markdown (Obsidian-compatible). Your library grows for years.</p>
+      </div>
+      <div class="feature">
+        <h3>sandboxed agent</h3>
+        <p>No shell tool. File operations path-jailed to your peer home. The agent cannot touch anything outside <code>~/.peer/</code>.</p>
+      </div>
+      <div class="feature">
+        <h3>$0.05 per field</h3>
+        <p>A 2,000-word PhD-quality field overview + 40-paper tiered reading list. 38 seconds. You pay your provider directly.</p>
+      </div>
+      <div class="feature">
+        <h3>built on pi-agent-core</h3>
+        <p>A minimal extensible agent runtime. The same substrate as coding agents — peer just has research-shaped tools.</p>
+      </div>
+      <div class="feature">
+        <h3>local · BYOK · Apache 2.0</h3>
+        <p>Your keys, your spend, your machine, your library. Free forever. Fork it, ship it, build on it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="install">
+    <h2>install</h2>
+    <p class="lede">one line. node 22+ required.</p>
+
+    <div class="install-cmd">
+      <button class="copy" onclick="navigator.clipboard.writeText('curl -fsSL https://raw.githubusercontent.com/KeWang0622/peer/main/scripts/install/install.sh | sh'); this.textContent='copied'; setTimeout(()=>this.textContent='copy',1500)">copy</button>
+      <span class="prompt">$ </span><code>curl -fsSL https://raw.githubusercontent.com/KeWang0622/peer/main/scripts/install/install.sh | sh</code>
+    </div>
+
+    <p class="keys">
+      Set your keys (BYOK):<br/>
+      <code>export ANTHROPIC_API_KEY=sk-ant-...</code> · required, the agent's brain<br/>
+      <code>export OPENAI_API_KEY=sk-...</code> · required for <code>peer ask</code> and <code>peer map</code> embeddings<br/>
+      <code>export SEMANTIC_SCHOLAR_API_KEY=...</code> · optional, raises rate limits<br/>
+      <br/>
+      Then: <code>peer doctor</code> → <code>peer onboard</code> → you're on the journey.
+    </p>
+  </section>
+
+  <section class="section" id="journey">
+    <h2>day 1 → day 30</h2>
+    <p class="lede">the agent shows up where you are.</p>
+
+    <table>
+      <thead>
+        <tr><th>When</th><th>What you run</th><th>What you get</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Day 1</td><td>peer onboard · peer map "&lt;area&gt;"</td><td>Profile + 40-paper field overview</td></tr>
+        <tr><td>Day 2-7</td><td>peer daily · peer read &lt;id&gt;</td><td>Personalized feed + papers in your graph</td></tr>
+        <tr><td>Day 7</td><td>peer ask "what do I know about X?"</td><td>Cited Q&A grounded in YOUR library</td></tr>
+        <tr><td>Day 14</td><td>peer gap "X and Y" · peer brainstorm</td><td>Sparse intersections + 3 framings for next direction</td></tr>
+        <tr><td>Day 21</td><td>peer outline · peer cite</td><td>Paper outline + BibTeX</td></tr>
+        <tr><td>Day 30</td><td>peer graph · peer history · peer journal</td><td>D3 graph + spend log + research diary</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <div class="quote">research is a journey.</div>
+    Apache 2.0 · BYOK · <a href="https://github.com/KeWang0622/peer">github.com/KeWang0622/peer</a><br/>
+    built on <a href="https://github.com/earendil-works/pi">pi-agent-core</a> · star to follow
+  </footer>
+
+</div>
+
+</body>
+</html>
