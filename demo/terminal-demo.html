@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>peer · research agent</title>
+<style>
+  :root {
+    --bg: #06070a;
+    --term: #0b0e14;
+    --term-edge: rgba(255,255,255,0.06);
+    --fg: #e8e4d8;
+    --dim: #8a8f9a;
+    --dim2: #5a6473;
+    --accent: #d4a574;
+    --ok: #b8d4a0;
+    --cyan: #8fb3c2;
+    --mono: 'JetBrains Mono','SF Mono','Menlo','Consolas',monospace;
+    --serif: 'Cormorant Garamond','Playfair Display',Georgia,serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    background: radial-gradient(ellipse at center, #0a0d18 0%, #04050a 80%);
+    color: var(--fg);
+    font-family: var(--mono);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* twinkle dot field */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  }
+  .stars span {
+    position: absolute; width: 2px; height: 2px;
+    background: #ffffff; border-radius: 50%;
+    opacity: 0; animation: twinkle 5s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: 0; }
+    50% { opacity: 0.7; }
+  }
+
+  /* stage */
+  .stage {
+    position: relative; z-index: 1;
+    width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  /* hook title (T=0-2s) */
+  .hook {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--serif);
+    font-size: 3.4rem; font-weight: 500;
+    color: var(--fg);
+    text-align: center;
+    letter-spacing: 0.01em;
+    opacity: 0;
+    animation: hookIn 0.8s ease 0.3s forwards, hookOut 0.5s ease 2.2s forwards;
+    line-height: 1.2;
+    max-width: 80vw;
+  }
+  .hook em { font-style: italic; color: var(--accent); }
+  @keyframes hookIn  { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+  @keyframes hookOut { from { opacity: 1; transform: translate(-50%, -50%); } to { opacity: 0; transform: translate(-50%, -55%); } }
+
+  /* terminal window (appears T=2.5s, slides up; later shrinks at T=12.5s) */
+  .term {
+    width: 78vw; max-width: 1120px;
+    background: var(--term);
+    border: 1px solid var(--term-edge);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+    animation: termIn 0.8s ease 2.4s forwards, termShrink 1.2s ease 12.5s forwards;
+  }
+  @keyframes termIn { from { opacity: 0; transform: translateY(40px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes termShrink {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0.85; transform: translateY(25vh) scale(0.42); }
+  }
+
+  .titlebar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px;
+    background: #0e1219;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .titlebar .dots { display: flex; gap: 7px; }
+  .titlebar .dots span {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #3a3f4b;
+  }
+  .titlebar .label {
+    margin-left: 16px;
+    font-size: 13px; color: var(--dim);
+    letter-spacing: 0.04em;
+  }
+
+  .term-body {
+    padding: 22px 26px 28px;
+    font-size: 18px;
+    line-height: 1.65;
+    min-height: 360px;
+  }
+
+  .prompt-line { display: flex; align-items: baseline; gap: 0; }
+  .prompt-line .ps1 { color: var(--cyan); }
+  .prompt-line .arrow { color: var(--dim); margin: 0 8px; }
+
+  .typed {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 0;
+    color: var(--fg);
+    vertical-align: bottom;
+    animation: typing 2.0s steps(34, end) 3.2s forwards;
+  }
+  @keyframes typing { from { width: 0; } to { width: 32ch; } }
+
+  .cursor {
+    display: inline-block;
+    width: 9px; height: 1.1em;
+    background: var(--fg);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.9s steps(1) infinite;
+  }
+  @keyframes blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+  .cursor.done { animation: none; opacity: 0; }
+
+  /* tool-call lines (appear T=6.3 onwards) */
+  .toolrow {
+    display: flex; align-items: center; gap: 12px;
+    padding-left: 1.2em;
+    color: var(--dim);
+    opacity: 0;
+  }
+  .toolrow .mark { width: 18px; display: inline-block; color: var(--accent); }
+  .toolrow .ok   { color: var(--ok); }
+  .toolrow .dur  { color: var(--dim2); font-size: 0.9em; margin-left: auto; }
+  .toolrow.r1 { animation: rowIn 0.4s ease 6.3s forwards; }
+  .toolrow.r2 { animation: rowIn 0.4s ease 7.1s forwards; }
+  .toolrow.r3 { animation: rowIn 0.4s ease 7.9s forwards; }
+  .toolrow.r4 { animation: rowIn 0.4s ease 8.7s forwards; }
+  @keyframes rowIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* result block (appears T=9.6s) */
+  .result {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-left: 2px solid var(--accent);
+    background: rgba(212,165,116,0.05);
+    opacity: 0;
+    animation: rowIn 0.5s ease 9.6s forwards;
+  }
+  .result .head { color: var(--ok); font-weight: 500; }
+  .result .head .small { color: var(--dim); font-weight: 400; }
+  .result .path { color: var(--dim); margin-top: 4px; }
+
+  .reading {
+    margin-top: 14px;
+    color: var(--dim);
+    opacity: 0;
+    animation: rowIn 0.5s ease 10.3s forwards;
+  }
+  .reading .title { color: var(--fg); }
+  .reading ol { padding-left: 1.4em; margin-top: 4px; }
+  .reading li { margin-top: 2px; }
+  .reading li code { color: var(--accent); }
+
+  /* outro title (T=13s onwards) */
+  .outro {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) translateY(-40px);
+    text-align: center;
+    opacity: 0;
+    animation: outroIn 0.8s ease 13.3s forwards;
+  }
+  @keyframes outroIn {
+    from { opacity: 0; transform: translate(-50%, -50%) translateY(-20px); }
+    to   { opacity: 1; transform: translate(-50%, -50%) translateY(-40px); }
+  }
+  .outro .word {
+    font-family: var(--serif);
+    font-size: 9rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+    color: var(--fg);
+    text-shadow: 0 0 30px rgba(244,238,224,0.18);
+  }
+  .outro .tag {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+  .outro .url {
+    margin-top: 28px;
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    color: var(--dim2);
+    letter-spacing: 0.1em;
+  }
+
+  /* constellation decoration (always visible, subtle) */
+  .constellation {
+    position: fixed; bottom: 6vh; right: 6vw;
+    width: 110px; height: 110px;
+    opacity: 0.6;
+    z-index: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+
+  <div class="constellation">
+    <svg viewBox="0 0 110 110" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.7">
+      <line x1="15" y1="80" x2="40" y2="50"/>
+      <line x1="40" y1="50" x2="70" y2="60"/>
+      <line x1="70" y1="60" x2="85" y2="35"/>
+      <line x1="70" y1="60" x2="95" y2="80"/>
+      <line x1="40" y1="50" x2="55" y2="25"/>
+      <circle cx="15" cy="80" r="2.2" fill="#fff"/>
+      <circle cx="40" cy="50" r="2.4" fill="#fff"/>
+      <circle cx="70" cy="60" r="2.6" fill="#d4a574"/>
+      <circle cx="85" cy="35" r="2.2" fill="#fff"/>
+      <circle cx="95" cy="80" r="1.8" fill="#fff"/>
+      <circle cx="55" cy="25" r="2.0" fill="#fff"/>
+    </svg>
+  </div>
+
+  <div class="stage">
+
+    <div class="hook">
+      what if your terminal<br/>could read every paper, <em>for you.</em>
+    </div>
+
+    <div class="term">
+      <div class="titlebar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="label">peer · research agent</div>
+      </div>
+      <div class="term-body">
+        <div class="prompt-line">
+          <span class="ps1">~/.peer</span><span class="arrow">❯</span>
+          <span class="typed">peer map "diffusion alignment"</span><span class="cursor" id="cursor"></span>
+        </div>
+
+        <div class="toolrow r1">
+          <span class="mark">·</span>
+          <span>searching: Semantic Scholar</span>
+          <span class="ok">✓</span>
+          <span class="dur">2.1s</span>
+        </div>
+        <div class="toolrow r2">
+          <span class="mark">·</span>
+          <span>seeded: 41 papers</span>
+          <span class="ok">✓</span>
+          <span class="dur">7.4s</span>
+        </div>
+        <div class="toolrow r3">
+          <span class="mark">·</span>
+          <span>clustering into 3 subfields</span>
+          <span class="ok">✓</span>
+          <span class="dur">18.2s</span>
+        </div>
+        <div class="toolrow r4">
+          <span class="mark">·</span>
+          <span>writing field overview</span>
+          <span class="ok">✓</span>
+          <span class="dur">38.0s</span>
+        </div>
+
+        <div class="result">
+          <div class="head">✓ 41 papers · 3 subfields · 38s · <span>$0.05</span> <span class="small">(your spend)</span></div>
+          <div class="path">→ ~/.peer/notes/fields/diffusion-alignment/</div>
+        </div>
+
+        <div class="reading">
+          <span class="title">top 3 to read first:</span>
+          <ol>
+            <li>DPO  <code>(arxiv:2305.18290)</code></li>
+            <li>RLHF <code>(arxiv:2203.02155)</code></li>
+            <li>Constitutional AI <code>(arxiv:2212.08073)</code></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="outro">
+      <div class="word">peer</div>
+      <div class="tag">a research agent that lives in your terminal</div>
+      <div class="url">github.com/KeWang0622/peer</div>
+    </div>
+
+  </div>
+
+<script>
+  // sprinkle 50 twinkle dots
+  const s = document.getElementById('stars');
+  for (let i = 0; i < 50; i++) {
+    const d = document.createElement('span');
+    d.style.left = (Math.random()*100) + 'vw';
+    d.style.top = (Math.random()*100) + 'vh';
+    d.style.animationDelay = (Math.random()*5) + 's';
+    d.style.opacity = 0;
+    s.appendChild(d);
+  }
+  // hide cursor after typing finishes
+  setTimeout(() => document.getElementById('cursor').classList.add('done'), 5300);
+</script>
+</body>
+</html>
