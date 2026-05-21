@@ -1,6 +1,6 @@
 {
   "name": "@kewang/peer",
-  "version": "0.0.1-alpha.10",
+  "version": "0.0.1-alpha.11",
   "description": "peer — a terminal-native research agent. Onboard a field in 10 minutes. Local-first. BYOK.",
   "keywords": [
     "research",

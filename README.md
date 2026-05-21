@@ -1,33 +1,46 @@
 <div align="center">
 
-<img src="docs/images/hero.jpg" alt="peer — a research agent that lives in your terminal" width="100%"/>
-
 # peer
 
 ### a **research agent** that lives in your terminal
 
-*Not a coding agent. Not a chatbot. An autonomous agent for the research journey — from "I have no idea what to work on" to your thesis defense.*
+*A local research agent for PhDs: maps fields, reads papers, checks citations, and compounds your library in `~/.peer/`.*
 
 ![status](https://img.shields.io/badge/status-alpha-orange)
 ![node](https://img.shields.io/badge/node-22%2B-green)
 ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
-![commands](https://img.shields.io/badge/commands-17-blue)
+![commands](https://img.shields.io/badge/commands-18-blue)
 ![agent](https://img.shields.io/badge/type-AI%20agent-purple)
+![sandboxed](https://img.shields.io/badge/sandbox-no%20bash-success)
 ![pi-agent-core](https://img.shields.io/badge/built%20on-pi--agent--core-black)
 
-**Local-first · BYOK · Apache 2.0**
+🌐 **[peer-research.pika.me](https://peer-research.pika.me)** &nbsp;·&nbsp; **Local-first · BYOK · Apache 2.0**
+
+<img src="docs/images/demo.gif" alt="peer mapping the diffusion-alignment field in 38 seconds" width="100%"/>
+
+*18s · cinematic · what `peer map "diffusion alignment"` actually looks like*
 
 </div>
 
 ---
 
+## one-line install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KeWang0622/peer/main/scripts/install/install.sh | sh
+```
+
+Then `peer doctor` → `peer onboard` and you're on the journey. See [Install](#install) for keys.
+
+---
+
 ## What is peer?
 
-> *you're a researcher, I'm a researcher* — same level, different toolset.
+> The agent owns the loop. You own the data. The graph compounds.
 
-**peer is an AI research agent.** It plans, picks tools, runs them, reads results, decides what's next, persists what it learns, and continues across sessions. It's not a wrapper around a chat box — it's a real agent loop built on [`pi-agent-core`](https://github.com/earendil-works/pi) with 17 research tools registered.
+**peer is an AI research agent — not a wrapper around a chat box, and not a coding agent.** It plans, picks tools, runs them, reads results, decides what's next, persists what it learns, and continues across sessions. Built on [`pi-agent-core`](https://github.com/earendil-works/pi) with 17 research tools registered.
 
-You talk to it like you'd talk to a smart labmate. It uses tools like you'd use a browser tab — except the browser tab remembers every paper you've ever read, can map an entire field in 38 seconds, and finds gaps in the literature while you sleep.
+You talk to it like you'd talk to a smart labmate. It uses tools like you'd use a browser tab — except the browser tab **remembers every paper you've ever read**, can **map an entire field in 38 seconds**, and **finds gaps in the literature while you sleep**.
 
 **peer calibrates to your role**: PhD student, postdoc, faculty, industry researcher, or independent learner. The agent adapts its language and recommendations to where you actually are.
 
@@ -104,14 +117,19 @@ peer is built on [`pi-agent-core`](https://github.com/earendil-works/pi) — a m
 
 ## Install
 
-`peer` ships from source while it's pre-1.0. Two steps:
+**One line** (recommended):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KeWang0622/peer/main/scripts/install/install.sh | sh
+```
+
+The script checks Node ≥22, clones into `~/.peer-src`, builds, runs `npm link`, and runs `peer doctor`. Read it first if you don't trust strangers piping into sh ([source](scripts/install/install.sh)).
+
+**Or manually:**
 
 ```bash
 git clone https://github.com/KeWang0622/peer.git
-cd peer
-npm install
-npm run build
-npm link              # makes `peer` available globally
+cd peer && npm install && npm run build && npm link
 ```
 
 Set your keys (BYOK — your library, your money, your data):
@@ -138,7 +156,7 @@ peer onboard
 
 ---
 
-## The 17 agent tools, by stage of your research journey
+## The 18 agent tools, by stage of your research journey
 
 ### orient — where am I?
 
@@ -178,6 +196,7 @@ peer onboard
 |---|---|
 | `peer collab "<topic\|author>"` | Looking for collaborators or labs. Active researchers ranked by recency. |
 | `peer graph` | Show me my journey. D3 force-directed knowledge graph in the browser. |
+| `peer share "<topic>"` | Export a beautiful HTML card from a field map. Tweetable, no private notes. |
 
 ### reflect — the journey log
 

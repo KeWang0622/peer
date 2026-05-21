@@ -111,7 +111,7 @@ export function printWelcome(brand: string = "lit"): void {
 
   console.log();
   console.log(c.primary("╭" + HR + "╮"));
-  console.log(box(c.bold(brand) + c.dim("  v0.0.1-alpha.10  ") + c.italic("research is a journey")));
+  console.log(box(c.bold(brand) + c.dim("  v0.0.1-alpha.11  ") + c.italic("research is a journey")));
   if (onboarded) {
     const stats: string[] = [];
     if (profile?.name) stats.push(c.bold(profile.name));

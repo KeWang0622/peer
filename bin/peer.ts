@@ -22,7 +22,7 @@ import { paths } from "../src/config/paths.js";
 import { countPapers } from "../src/db/client.js";
 import { totalCostUsd } from "../src/lib/llm.js";
 
-const VERSION = "0.0.1-alpha.10";
+const VERSION = "0.0.1-alpha.11";
 const BRAND = "peer";
 
 function printHelp(): void {
@@ -58,6 +58,7 @@ COMMANDS — research is a journey
   discuss / share
     collab     <topic|author>     find potential collaborators
     graph                         open knowledge graph in browser
+    share      <topic>            export a shareable HTML card from a field map
 
   reflect / meta
     journal    [<text>]           append/read your research diary
@@ -433,6 +434,13 @@ async function main(): Promise<void> {
     case "shell": {
       const { cmdShell } = await import("../src/tui/repl.js");
       await cmdShell({ verbose });
+      break;
+    }
+
+    case "share": {
+      const topic = args.join(" ").trim() || null;
+      const { cmdShare } = await import("../src/commands/share.js");
+      await cmdShare(topic, { verbose });
       break;
     }
 
